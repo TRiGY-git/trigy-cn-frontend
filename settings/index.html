@@ -104,6 +104,82 @@
       line-height: 1.6;
     }
 
+    /* ─── Mapování polí editor ────────────────────────────── */
+    .mapovani-toolbar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+      align-items: center;
+    }
+    .btn {
+      padding: 7px 14px;
+      border-radius: 5px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: background 0.12s, color 0.12s;
+    }
+    .btn-primary { background: #79489c; color: #fff; border-color: #79489c; }
+    .btn-primary:hover { background: #5e3279; }
+    .btn-secondary { background: #fff; color: #79489c; border-color: #79489c; }
+    .btn-secondary:hover { background: #EFE7F5; }
+    .btn-danger { background: #fff; color: #c0392b; border-color: #c0392b; font-size: 11px; padding: 4px 8px; }
+    .btn-danger:hover { background: #fdf0ef; }
+
+    .mapovani-table-wrap { overflow-x: auto; }
+    .mapovani-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .mapovani-table th {
+      background: #f3eef9;
+      color: #555;
+      font-weight: 600;
+      text-align: left;
+      padding: 7px 8px;
+      border-bottom: 1px solid #d5c5e8;
+      white-space: nowrap;
+    }
+    .mapovani-table td { padding: 5px 6px; border-bottom: 1px solid #eee; vertical-align: top; }
+    .mapovani-table input[type=text],
+    .mapovani-table select {
+      width: 100%;
+      padding: 4px 6px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 12px;
+      min-width: 90px;
+    }
+    .mapovani-table input[type=text]:focus,
+    .mapovani-table select:focus {
+      outline: none;
+      border-color: #79489c;
+    }
+    .enum-map-wrap {
+      margin-top: 6px;
+      background: #faf7fd;
+      border: 1px solid #d5c5e8;
+      border-radius: 4px;
+      padding: 6px 8px;
+    }
+    .enum-map-wrap table { font-size: 11px; border-collapse: collapse; }
+    .enum-map-wrap td { padding: 2px 4px; }
+    .enum-map-wrap input { width: 120px; }
+    .enum-map-label { font-size: 11px; color: #79489c; margin-bottom: 4px; font-weight: 600; }
+
+    .toast {
+      margin-top: 10px;
+      padding: 8px 12px;
+      border-radius: 5px;
+      font-size: 12px;
+      display: none;
+    }
+    .toast.show { display: block; }
+    .toast-success { background: #e8f5e9; color: #256029; border: 1px solid #a5d6a7; }
+    .toast-error   { background: #fdf0ef; color: #a93226; border: 1px solid #f5c6c6; }
+    .toast-warn    { background: #fff8e1; color: #7d5a00; border: 1px solid #ffe082; }
+
+    .mapovani-loading { font-size: 12px; color: #888; padding: 8px 0; }
+
     /* ─── Footer ──────────────────────────────────── */
     footer {
       background: #fff;
@@ -146,7 +222,30 @@
       </div>
       <div class="section" id="section-mapovani">
         <h2>Mapování polí</h2>
-        <p class="placeholder-text">Tato sekce se připravuje (fáze 5). Data se zatím spravují přímo v Supabase.</p>
+        <div id="mapovani-banner" class="toast toast-warn" style="display:none;margin-bottom:10px;">
+          Mimo Pipedrive — admin funkce nedostupné
+        </div>
+        <div class="mapovani-toolbar">
+          <button class="btn btn-secondary" id="btn-refresh-fields" type="button">Obnovit pole z Pipedrive</button>
+          <button class="btn btn-secondary" id="btn-add-row" type="button">Přidat řádek</button>
+          <button class="btn btn-primary"   id="btn-save"         type="button">Uložit mapování</button>
+        </div>
+        <div id="mapovani-loading" class="mapovani-loading" style="display:none;">Načítám…</div>
+        <div class="mapovani-table-wrap">
+          <table class="mapovani-table" id="mapovani-table">
+            <thead>
+              <tr>
+                <th style="min-width:120px">Interní klíč</th>
+                <th style="min-width:110px">Typ</th>
+                <th style="min-width:120px">Transformace</th>
+                <th style="min-width:180px">Pipedrive pole</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="mapovani-tbody"></tbody>
+          </table>
+        </div>
+        <div id="mapovani-toast" class="toast"></div>
       </div>
       <div class="section" id="section-historie">
         <h2>Historie CN</h2>
@@ -181,6 +280,314 @@
       if (navBtns.length > 0) {
         showSection(navBtns[0].dataset.section);
       }
+    })();
+  </script>
+
+  <!-- Pipedrive App Extensions SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@pipedrive/app-extensions-sdk@0/dist/index.umd.js"></script>
+
+  <script>
+    (function () {
+      'use strict';
+
+      const API_BASE = 'https://dvcxqjlbyajqnkylmdya.supabase.co/functions/v1/api';
+      let _sdk = null;
+      let _outsidePipedrive = false;
+      let _pdFields = [];   // [{key,name,fieldType,options?}]
+
+      // ── SDK init ──────────────────────────────────────────────────────────
+      async function initSdk() {
+        try {
+          if (typeof AppExtensionsSDK === 'undefined') throw new Error('SDK not loaded');
+          _sdk = await new AppExtensionsSDK().initialize({ size: { height: 600 } }).catch(() => null);
+          if (!_sdk) throw new Error('initialize returned null');
+        } catch (_e) {
+          _outsidePipedrive = true;
+          document.getElementById('mapovani-banner').style.display = 'block';
+        }
+      }
+
+      async function getToken() {
+        if (_outsidePipedrive || !_sdk) throw new Error('outside Pipedrive');
+        const CommandKey = (typeof AppExtensionsSDK !== 'undefined' && AppExtensionsSDK.Command)
+          ? AppExtensionsSDK.Command.GET_SIGNED_TOKEN
+          : 'get_signed_token';
+        const result = await _sdk.execute(CommandKey);
+        return result.token;
+      }
+
+      // ── API helpers ───────────────────────────────────────────────────────
+      async function apiFetch(path, opts) {
+        const token = await getToken();
+        const res = await fetch(API_BASE + path, {
+          ...opts,
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, ...(opts && opts.headers) },
+        });
+        return res.json();
+      }
+
+      // ── Toast ─────────────────────────────────────────────────────────────
+      function showToast(msg, type) {
+        const el = document.getElementById('mapovani-toast');
+        el.textContent = msg;
+        el.className = 'toast show toast-' + type;
+        setTimeout(function () { el.classList.remove('show'); }, 4000);
+      }
+
+      // ── Render enum-map sub-table ─────────────────────────────────────────
+      function renderEnumMap(td, options, existingMap) {
+        // td: the <td> cell that holds both the select and (optionally) the enum sub-table
+        // options: [{id,label}]
+        // existingMap: Record<string,string> | undefined
+        let wrap = td.querySelector('.enum-map-wrap');
+        if (!wrap) {
+          wrap = document.createElement('div');
+          wrap.className = 'enum-map-wrap';
+          td.appendChild(wrap);
+        }
+        wrap.innerHTML = '';
+        const lbl = document.createElement('div');
+        lbl.className = 'enum-map-label';
+        lbl.textContent = 'Mapování hodnot (Pipedrive ID → interní hodnota):';
+        wrap.appendChild(lbl);
+        const tbl = document.createElement('table');
+        options.forEach(function (opt) {
+          const tr = document.createElement('tr');
+          const td1 = document.createElement('td');
+          td1.textContent = opt.label + ' (' + opt.id + ')';
+          td1.style.minWidth = '130px';
+          const td2 = document.createElement('td');
+          const inp = document.createElement('input');
+          inp.type = 'text';
+          inp.placeholder = 'interní hodnota (prázdné = přeskočit)';
+          inp.dataset.optId = opt.id;
+          inp.value = (existingMap && existingMap[opt.id]) ? existingMap[opt.id] : '';
+          td2.appendChild(inp);
+          tr.appendChild(td1);
+          tr.appendChild(td2);
+          tbl.appendChild(tr);
+        });
+        wrap.appendChild(tbl);
+      }
+
+      function removeEnumMap(td) {
+        const wrap = td.querySelector('.enum-map-wrap');
+        if (wrap) wrap.remove();
+      }
+
+      // ── Build one table row ───────────────────────────────────────────────
+      function buildRow(mapping) {
+        // mapping: {internalKey, pipedriveFieldKey, entity, target, transform?} or null for blank
+        const tr = document.createElement('tr');
+
+        // 1. internalKey
+        const tdKey = document.createElement('td');
+        const inpKey = document.createElement('input');
+        inpKey.type = 'text';
+        inpKey.placeholder = 'napr. product';
+        inpKey.pattern = '^[a-z0-9_]+$';
+        inpKey.value = mapping ? mapping.internalKey : '';
+        tdKey.appendChild(inpKey);
+        tr.appendChild(tdKey);
+
+        // 2. target (Typ)
+        const tdTarget = document.createElement('td');
+        const selTarget = document.createElement('select');
+        ['product', 'variable', 'option'].forEach(function (v) {
+          const o = document.createElement('option');
+          o.value = v;
+          o.textContent = v;
+          if (mapping && mapping.target === v) o.selected = true;
+          selTarget.appendChild(o);
+        });
+        tdTarget.appendChild(selTarget);
+        tr.appendChild(tdTarget);
+
+        // 3. transform kind
+        const tdTransform = document.createElement('td');
+        const selTransform = document.createElement('select');
+        ['string', 'number', 'boolean', 'enum'].forEach(function (v) {
+          const o = document.createElement('option');
+          o.value = v;
+          o.textContent = v;
+          if (mapping && mapping.transform && mapping.transform.kind === v) o.selected = true;
+          selTransform.appendChild(o);
+        });
+        tdTransform.appendChild(selTransform);
+        tr.appendChild(tdTransform);
+
+        // 4. Pipedrive field select
+        const tdField = document.createElement('td');
+        const selField = document.createElement('select');
+        const emptyOpt = document.createElement('option');
+        emptyOpt.value = '';
+        emptyOpt.textContent = '— vyberte pole —';
+        selField.appendChild(emptyOpt);
+        _pdFields.forEach(function (f) {
+          const o = document.createElement('option');
+          o.value = f.key;
+          o.textContent = f.name + ' (' + f.fieldType + ')';
+          if (mapping && mapping.pipedriveFieldKey === f.key) o.selected = true;
+          selField.appendChild(o);
+        });
+        tdField.appendChild(selField);
+        tr.appendChild(tdField);
+
+        // 5. Delete button
+        const tdDel = document.createElement('td');
+        const btnDel = document.createElement('button');
+        btnDel.type = 'button';
+        btnDel.className = 'btn btn-danger';
+        btnDel.textContent = 'Smazat';
+        btnDel.addEventListener('click', function () { tr.remove(); });
+        tdDel.appendChild(btnDel);
+        tr.appendChild(tdDel);
+
+        // Enum-map logic: show sub-table when transform=enum and field has options
+        function refreshEnumSubTable() {
+          const kind = selTransform.value;
+          const fieldKey = selField.value;
+          const field = _pdFields.find(function (f) { return f.key === fieldKey; });
+          if (kind === 'enum' && field && field.options && field.options.length > 0) {
+            const existingMap = (mapping && mapping.transform && mapping.transform.enumMap) ? mapping.transform.enumMap : {};
+            renderEnumMap(tdField, field.options, existingMap);
+          } else {
+            removeEnumMap(tdField);
+          }
+        }
+
+        selTransform.addEventListener('change', refreshEnumSubTable);
+        selField.addEventListener('change', function () {
+          // Clear existing mapping reference when field changes so we don't pre-fill stale map
+          if (mapping) mapping = Object.assign({}, mapping, { transform: mapping.transform ? Object.assign({}, mapping.transform, { enumMap: {} }) : undefined });
+          refreshEnumSubTable();
+        });
+
+        // Initial render of enum sub-table if applicable
+        refreshEnumSubTable();
+
+        return tr;
+      }
+
+      // ── Read row data from table ──────────────────────────────────────────
+      function collectMappings() {
+        const rows = document.querySelectorAll('#mapovani-tbody tr');
+        const mappings = [];
+        let valid = true;
+        rows.forEach(function (tr) {
+          const [tdKey, tdTarget, tdTransform, tdField] = tr.querySelectorAll('td');
+          const internalKey = tdKey.querySelector('input').value.trim();
+          const target = tdTarget.querySelector('select').value;
+          const transformKind = tdTransform.querySelector('select').value;
+          const pipedriveFieldKey = tdField.querySelector('select').value;
+
+          if (!internalKey) { valid = false; showToast('Interní klíč nesmí být prázdný', 'error'); return; }
+          if (!/^[a-z0-9_]+$/.test(internalKey)) { valid = false; showToast('Interní klíč musí být [a-z0-9_]+', 'error'); return; }
+          if (!pipedriveFieldKey) { valid = false; showToast('Vyberte Pipedrive pole pro každý řádek', 'error'); return; }
+
+          const transform = { kind: transformKind };
+          // Collect enumMap from sub-table if present
+          const enumInputs = tdField.querySelectorAll('.enum-map-wrap input');
+          if (enumInputs.length > 0) {
+            const enumMap = {};
+            enumInputs.forEach(function (inp) {
+              if (inp.value.trim()) enumMap[inp.dataset.optId] = inp.value.trim();
+            });
+            if (Object.keys(enumMap).length > 0) transform.enumMap = enumMap;
+          }
+
+          mappings.push({ internalKey, pipedriveFieldKey, entity: 'deal', target, transform });
+        });
+        return valid ? mappings : null;
+      }
+
+      // ── Load + render ─────────────────────────────────────────────────────
+      async function loadMappings() {
+        if (_outsidePipedrive) return;
+        const loading = document.getElementById('mapovani-loading');
+        loading.style.display = 'block';
+        try {
+          const [fieldsRes, mappingsRes] = await Promise.all([
+            apiFetch('/admin/pipedrive-fields'),
+            apiFetch('/admin/field-mappings'),
+          ]);
+          if (!fieldsRes.ok) throw new Error(fieldsRes.error || 'Chyba při načítání polí');
+          if (!mappingsRes.ok) throw new Error(mappingsRes.error || 'Chyba při načítání mapování');
+
+          _pdFields = fieldsRes.fields;
+          const tbody = document.getElementById('mapovani-tbody');
+          tbody.innerHTML = '';
+          mappingsRes.mappings.forEach(function (m) {
+            tbody.appendChild(buildRow(m));
+          });
+        } catch (err) {
+          showToast('Chyba: ' + err.message, 'error');
+        } finally {
+          loading.style.display = 'none';
+        }
+      }
+
+      async function refreshFields() {
+        if (_outsidePipedrive) return;
+        const loading = document.getElementById('mapovani-loading');
+        loading.style.display = 'block';
+        try {
+          const res = await apiFetch('/admin/pipedrive-fields');
+          if (!res.ok) throw new Error(res.error || 'Chyba při obnovení polí');
+          _pdFields = res.fields;
+          // Re-render all rows to update the field selects
+          const tbody = document.getElementById('mapovani-tbody');
+          const existingRows = Array.from(tbody.querySelectorAll('tr'));
+          // Collect current state before rebuild
+          const currentMappings = collectMappings();
+          tbody.innerHTML = '';
+          (currentMappings || []).forEach(function (m) {
+            tbody.appendChild(buildRow(m));
+          });
+          showToast('Pole z Pipedrive obnovena (' + _pdFields.length + ' polí)', 'success');
+        } catch (err) {
+          showToast('Chyba: ' + err.message, 'error');
+        } finally {
+          loading.style.display = 'none';
+        }
+      }
+
+      async function saveMappings() {
+        if (_outsidePipedrive) return;
+        const mappings = collectMappings();
+        if (!mappings) return; // validation failed — toast already shown
+        try {
+          const res = await apiFetch('/admin/field-mappings', {
+            method: 'PUT',
+            body: JSON.stringify({ mappings }),
+          });
+          if (!res.ok) throw new Error(JSON.stringify(res.error));
+          showToast('Mapování uloženo (' + res.count + ' záznamů)', 'success');
+        } catch (err) {
+          showToast('Chyba ukládání: ' + err.message, 'error');
+        }
+      }
+
+      // ── Event wiring ──────────────────────────────────────────────────────
+      document.getElementById('btn-refresh-fields').addEventListener('click', refreshFields);
+      document.getElementById('btn-save').addEventListener('click', saveMappings);
+      document.getElementById('btn-add-row').addEventListener('click', function () {
+        document.getElementById('mapovani-tbody').appendChild(buildRow(null));
+      });
+
+      // Load when the section becomes visible (nav click)
+      let _mappingLoaded = false;
+      document.querySelectorAll('.nav-item').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          if (btn.dataset.section === 'mapovani' && !_mappingLoaded) {
+            _mappingLoaded = true;
+            loadMappings();
+          }
+        });
+      });
+
+      // ── Bootstrap ─────────────────────────────────────────────────────────
+      initSdk();
     })();
   </script>
 </body>
