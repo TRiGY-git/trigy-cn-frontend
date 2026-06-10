@@ -309,7 +309,8 @@
           // Mimo Pipedrive není handshake protistrana — to je očekávané. Uvnitř
           // Pipedrive zobraz konkrétní chybu, ať se dá diagnostikovat.
           if (window.self !== window.top) {
-            banner.textContent = 'SDK init selhal: ' + (e && e.message ? e.message : String(e));
+            banner.textContent = 'SDK init selhal: ' + (e && e.message ? e.message : String(e)) +
+              ' | URL iframe: ' + location.href;
           }
         }
       }
