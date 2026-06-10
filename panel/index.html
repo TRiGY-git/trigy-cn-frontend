@@ -141,12 +141,14 @@
 
       // Initialise Pipedrive SDK (defensive — outside Pipedrive it will fail)
       let sdkReady = false;
+      let sdkInstance = null;
       try {
         const identifier = params.get('id') || undefined;
         const sdk = new AppExtensionsSDK(identifier ? { identifier } : undefined);
         sdk.initialize({ size: { height: 180 } })
           .then(function (ctx) {
             sdkReady = true;
+            sdkInstance = sdk;
             // SDK context may carry the deal id; use it if available
             if (ctx && ctx.id && !isNaN(parseInt(ctx.id, 10))) {
               dealId = parseInt(ctx.id, 10);
@@ -158,6 +160,14 @@
           });
       } catch (e) {
         demoBanner.style.display = 'block';
+      }
+
+      /** Získá podepsaný token ze SDK, nebo null pokud mimo Pipedrive */
+      function getSignedToken() {
+        if (!sdkInstance) return Promise.resolve(null);
+        return sdkInstance.execute('get_signed_token')
+          .then(function (res) { return (res && res.token) ? res.token : null; })
+          .catch(function () { return null; });
       }
 
       function setIdle() {
@@ -176,9 +186,9 @@
       function setSuccess(data) {
         btn.disabled = false;
         btn.textContent = 'Vygenerovat CN';
-        let pdfLink = '';
+        let dealLink = '';
         if (data.fileUrl) {
-          pdfLink = '<a class="pdf-link" href="' + data.fileUrl + '" target="_blank">Otevřít PDF v dealu</a>';
+          dealLink = '<a class="pdf-link" href="' + data.fileUrl + '" target="_blank">Otevřít deal</a>';
         }
         let quoteNum = '';
         if (data.quoteNumber || data.quoteId) {
@@ -188,7 +198,7 @@
           '<div class="status-success">' +
             '<div class="check-row"><span class="check-icon">&#10003;</span><span>Hotovo</span></div>' +
             quoteNum +
-            pdfLink +
+            dealLink +
           '</div>';
       }
 
@@ -199,24 +209,47 @@
       }
 
       btn.addEventListener('click', function () {
+        // Mimo Pipedrive nelze generovat
+        if (!sdkReady) {
+          setError('Mimo Pipedrive nelze generovat.');
+          return;
+        }
+
+        // Validace dealId
+        if (!dealId || dealId === 0) {
+          setError('Nepodařilo se zjistit ID dealu.');
+          return;
+        }
+
         setLoading();
 
-        fetch(API_BASE + "/quote/generate", {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ dealId: dealId }),
-        })
-          .then(function (res) {
-            return res.json().then(function (data) {
-              return { status: res.status, data: data };
-            });
-          })
-          .then(function (result) {
-            if (result.status >= 200 && result.status < 300 && result.data && result.data.ok) {
-              setSuccess(result.data);
-            } else {
-              setError((result.data && result.data.message) || 'Server vrátil chybu ' + result.status);
+        getSignedToken()
+          .then(function (token) {
+            if (!token) {
+              setError('Nepodařilo se získat podepsaný token ze Pipedrive.');
+              return;
             }
+
+            return fetch(API_BASE + "/quote/generate", {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token,
+              },
+              body: JSON.stringify({ dealId: dealId }),
+            })
+              .then(function (res) {
+                return res.json().then(function (data) {
+                  return { status: res.status, data: data };
+                });
+              })
+              .then(function (result) {
+                if (result.status >= 200 && result.status < 300 && result.data && result.data.ok) {
+                  setSuccess(result.data);
+                } else {
+                  setError((result.data && result.data.error) || 'Server vrátil chybu ' + result.status);
+                }
+              });
           })
           .catch(function (err) {
             setError('Síťová chyba: ' + err.message);
@@ -224,6 +257,6 @@
       });
     })();
   </script>
-  <!-- TODO fáze 3: skutečné generování CN (PDF, upload na deal, Supabase uložení) -->
+
 </body>
 </html>
