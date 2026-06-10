@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generátor CN</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-size: 14px;
+      background: #ffffff;
+      color: #333;
+      padding: 16px;
+    }
+
+    #demo-banner {
+      display: none;
+      background: #fff8dc;
+      border: 1px solid #f0c040;
+      border-radius: 4px;
+      padding: 6px 10px;
+      font-size: 12px;
+      color: #856404;
+      margin-bottom: 12px;
+    }
+
+    #btn-generate {
+      display: block;
+      width: 100%;
+      padding: 10px 16px;
+      background: #79489c;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.15s;
+      letter-spacing: 0.01em;
+    }
+    #btn-generate:hover:not(:disabled) { background: #5f3680; }
+    #btn-generate:disabled {
+      background: #b0b0b0;
+      cursor: not-allowed;
+    }
+
+    #status {
+      margin-top: 12px;
+      min-height: 36px;
+    }
+
+    /* idle */
+    .status-idle {
+      font-size: 12px;
+      color: #888;
+    }
+
+    /* loading */
+    .status-loading {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #555;
+    }
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid #d0b8e8;
+      border-top-color: #79489c;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* success */
+    .status-success {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .status-success .check-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: #1a7d3c;
+      font-weight: 600;
+    }
+    .status-success .check-row .check-icon {
+      font-size: 16px;
+    }
+    .status-success .quote-number {
+      font-size: 11px;
+      color: #666;
+    }
+    .status-success a.pdf-link {
+      font-size: 12px;
+      color: #79489c;
+      text-decoration: underline;
+      word-break: break-all;
+    }
+
+    /* error */
+    .status-error {
+      font-size: 13px;
+      color: #c0392b;
+    }
+  </style>
+</head>
+<body>
+  <div id="demo-banner">Běžím mimo Pipedrive — demo režim</div>
+
+  <button id="btn-generate" type="button">Vygenerovat CN</button>
+
+  <div id="status">
+    <div class="status-idle">Vstupy se načítají z polí dealu.</div>
+  </div>
+
+  <!-- Pipedrive App Extensions SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@pipedrive/app-extensions-sdk@0/dist/index.umd.js"></script>
+  <script>
+    (function () {
+      const API_BASE = "https://dvcxqjlbyajqnkylmdya.supabase.co/functions/v1/api";
+
+      const btn = document.getElementById('btn-generate');
+      const statusEl = document.getElementById('status');
+      const demoBanner = document.getElementById('demo-banner');
+
+      // Extract dealId from URL query params (?selectedIds=123 is appended by Pipedrive)
+      const params = new URLSearchParams(location.search);
+      let dealId = 0;
+      const selectedIds = params.get('selectedIds');
+      if (selectedIds) {
+        const parsed = parseInt(selectedIds, 10);
+        if (!isNaN(parsed)) dealId = parsed;
+      }
+
+      // Initialise Pipedrive SDK (defensive — outside Pipedrive it will fail)
+      let sdkReady = false;
+      try {
+        const identifier = params.get('id') || undefined;
+        const sdk = new AppExtensionsSDK(identifier ? { identifier } : undefined);
+        sdk.initialize({ size: { height: 180 } })
+          .then(function (ctx) {
+            sdkReady = true;
+            // SDK context may carry the deal id; use it if available
+            if (ctx && ctx.id && !isNaN(parseInt(ctx.id, 10))) {
+              dealId = parseInt(ctx.id, 10);
+            }
+          })
+          .catch(function () {
+            // Running outside Pipedrive — show demo banner
+            demoBanner.style.display = 'block';
+          });
+      } catch (e) {
+        demoBanner.style.display = 'block';
+      }
+
+      function setIdle() {
+        btn.disabled = false;
+        btn.textContent = 'Vygenerovat CN';
+        statusEl.innerHTML = '<div class="status-idle">Vstupy se načítají z polí dealu.</div>';
+      }
+
+      function setLoading() {
+        btn.disabled = true;
+        btn.textContent = 'Vygenerovat CN';
+        statusEl.innerHTML =
+          '<div class="status-loading"><div class="spinner"></div><span>Generuji cenovou nabídku…</span></div>';
+      }
+
+      function setSuccess(data) {
+        btn.disabled = false;
+        btn.textContent = 'Vygenerovat CN';
+        let pdfLink = '';
+        if (data.fileUrl) {
+          pdfLink = '<a class="pdf-link" href="' + data.fileUrl + '" target="_blank">Otevřít PDF v dealu</a>';
+        }
+        let quoteNum = '';
+        if (data.quoteNumber || data.quoteId) {
+          quoteNum = '<div class="quote-number">' + (data.quoteNumber || data.quoteId) + '</div>';
+        }
+        statusEl.innerHTML =
+          '<div class="status-success">' +
+            '<div class="check-row"><span class="check-icon">&#10003;</span><span>Hotovo</span></div>' +
+            quoteNum +
+            pdfLink +
+          '</div>';
+      }
+
+      function setError(msg) {
+        btn.disabled = false;
+        btn.textContent = 'Zkusit znovu';
+        statusEl.innerHTML = '<div class="status-error">' + (msg || 'Nastala chyba. Zkuste to znovu.') + '</div>';
+      }
+
+      btn.addEventListener('click', function () {
+        setLoading();
+
+        fetch(API_BASE + "/quote/generate", {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dealId: dealId }),
+        })
+          .then(function (res) {
+            return res.json().then(function (data) {
+              return { status: res.status, data: data };
+            });
+          })
+          .then(function (result) {
+            if (result.status >= 200 && result.status < 300 && result.data && result.data.ok) {
+              setSuccess(result.data);
+            } else {
+              setError((result.data && result.data.message) || 'Server vrátil chybu ' + result.status);
+            }
+          })
+          .catch(function (err) {
+            setError('Síťová chyba: ' + err.message);
+          });
+      });
+    })();
+  </script>
+  <!-- TODO fáze 3: skutečné generování CN (PDF, upload na deal, Supabase uložení) -->
+</body>
+</html>
