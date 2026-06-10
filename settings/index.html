@@ -298,12 +298,19 @@
       // ── SDK init ──────────────────────────────────────────────────────────
       async function initSdk() {
         try {
-          if (typeof AppExtensionsSDK === 'undefined') throw new Error('SDK not loaded');
-          _sdk = await new AppExtensionsSDK().initialize({ size: { height: 600 } }).catch(() => null);
-          if (!_sdk) throw new Error('initialize returned null');
-        } catch (_e) {
+          if (typeof AppExtensionsSDK === 'undefined') throw new Error('SDK script se nenačetl (CDN)');
+          // App settings extension: initialize bez argumentů (size umí jen panely/modaly)
+          _sdk = await new AppExtensionsSDK().initialize();
+        } catch (e) {
           _outsidePipedrive = true;
-          document.getElementById('mapovani-banner').style.display = 'block';
+          console.error('[CN settings] SDK init selhal:', e);
+          const banner = document.getElementById('mapovani-banner');
+          banner.style.display = 'block';
+          // Mimo Pipedrive není handshake protistrana — to je očekávané. Uvnitř
+          // Pipedrive zobraz konkrétní chybu, ať se dá diagnostikovat.
+          if (window.self !== window.top) {
+            banner.textContent = 'SDK init selhal: ' + (e && e.message ? e.message : String(e));
+          }
         }
       }
 
