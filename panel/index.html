@@ -109,6 +109,51 @@
       font-size: 13px;
       color: #c0392b;
     }
+
+    /* ─── CN history list ─── */
+    #cn-history {
+      display: none;
+      margin-top: 16px;
+    }
+    #cn-history h3 {
+      font-size: 12px;
+      font-weight: 600;
+      color: #79489c;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+    #cn-history table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    #cn-history thead th {
+      background: #f4f0f8;
+      color: #666;
+      font-weight: 600;
+      text-align: left;
+      padding: 4px 6px;
+      border-bottom: 1px solid #e0d6ec;
+    }
+    #cn-history tbody tr:nth-child(even) {
+      background: #faf8fc;
+    }
+    #cn-history tbody td {
+      padding: 4px 6px;
+      color: #333;
+      vertical-align: middle;
+    }
+    #cn-history tbody td:first-child {
+      font-weight: 700;
+      color: #79489c;
+    }
+    #cn-history .cn-overflow {
+      font-size: 11px;
+      color: #888;
+      margin-top: 4px;
+      text-align: right;
+    }
   </style>
 </head>
 <body>
@@ -118,6 +163,23 @@
 
   <div id="status">
     <div class="status-idle">Vstupy se načítají z polí dealu.</div>
+  </div>
+
+  <!-- CN history list -->
+  <div id="cn-history">
+    <h3>Vygenerované CN</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Číslo CN</th>
+          <th>Celkem</th>
+          <th>Marže</th>
+          <th>Datum</th>
+        </tr>
+      </thead>
+      <tbody id="cn-history-body"></tbody>
+    </table>
+    <div class="cn-overflow" id="cn-overflow" style="display:none"></div>
   </div>
 
   <!-- Pipedrive App Extensions SDK -->
@@ -145,13 +207,19 @@
       try {
         const identifier = params.get('id') || undefined;
         const sdk = new AppExtensionsSDK(identifier ? { identifier } : undefined);
-        sdk.initialize({ size: { height: 180 } })
+        sdk.initialize({ size: { height: 320 } })
           .then(function (ctx) {
             sdkReady = true;
             sdkInstance = sdk;
             // SDK context may carry the deal id; use it if available
             if (ctx && ctx.id && !isNaN(parseInt(ctx.id, 10))) {
               dealId = parseInt(ctx.id, 10);
+            }
+            // Load CN history after SDK is ready (inside Pipedrive, dealId known)
+            if (dealId > 0) {
+              getSignedToken().then(function (token) {
+                if (token) loadCnHistory(token);
+              });
             }
           })
           .catch(function () {
@@ -168,6 +236,60 @@
         return sdkInstance.execute('get_signed_token')
           .then(function (res) { return (res && res.token) ? res.token : null; })
           .catch(function () { return null; });
+      }
+
+      var cnHistoryEl = document.getElementById('cn-history');
+      var cnHistoryBody = document.getElementById('cn-history-body');
+      var cnOverflow = document.getElementById('cn-overflow');
+
+      var MAX_ROWS = 5;
+
+      function formatTotal(total) {
+        if (total === null || total === undefined) return '—';
+        return new Intl.NumberFormat('cs-CZ', { style: 'currency', currency: 'CZK', maximumFractionDigits: 0 }).format(total);
+      }
+
+      function formatDate(isoStr) {
+        if (!isoStr) return '—';
+        return new Date(isoStr).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric', year: 'numeric' });
+      }
+
+      function loadCnHistory(token) {
+        if (!dealId || dealId <= 0) return;
+        fetch(API_BASE + '/quote/list?dealId=' + dealId, {
+          headers: { 'Authorization': 'Bearer ' + token },
+        })
+          .then(function (res) { return res.json(); })
+          .then(function (data) {
+            if (!data.ok || !Array.isArray(data.quotes) || data.quotes.length === 0) {
+              cnHistoryEl.style.display = 'none';
+              return;
+            }
+            var quotes = data.quotes;
+            var visible = quotes.slice(0, MAX_ROWS);
+            var overflow = quotes.length - MAX_ROWS;
+
+            cnHistoryBody.innerHTML = visible.map(function (q) {
+              return '<tr>' +
+                '<td>' + q.quoteNumber + '</td>' +
+                '<td>' + formatTotal(q.total) + '</td>' +
+                '<td>—</td>' +
+                '<td>' + formatDate(q.createdAt) + '</td>' +
+                '</tr>';
+            }).join('');
+
+            if (overflow > 0) {
+              cnOverflow.textContent = '(+' + overflow + ' starších)';
+              cnOverflow.style.display = 'block';
+            } else {
+              cnOverflow.style.display = 'none';
+            }
+
+            cnHistoryEl.style.display = 'block';
+          })
+          .catch(function () {
+            // Silently ignore errors in history load
+          });
       }
 
       function setIdle() {
@@ -246,6 +368,8 @@
               .then(function (result) {
                 if (result.status >= 200 && result.status < 300 && result.data && result.data.ok) {
                   setSuccess(result.data);
+                  // Re-fetch CN history after successful generate
+                  getSignedToken().then(function (t) { if (t) loadCnHistory(t); });
                 } else {
                   setError((result.data && result.data.error) || 'Server vrátil chybu ' + result.status);
                 }
