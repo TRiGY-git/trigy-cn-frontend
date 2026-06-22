@@ -180,6 +180,121 @@
 
     .mapovani-loading { font-size: 12px; color: #888; padding: 8px 0; }
 
+    /* ─── Ceník preview ──────────────────────────────── */
+    .cenik-toolbar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+      align-items: center;
+    }
+    .cenik-filter {
+      padding: 6px 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 12px;
+      width: 220px;
+    }
+    .cenik-filter:focus { outline: none; border-color: #79489c; }
+    .cenik-note {
+      font-size: 11px;
+      color: #888;
+      margin-bottom: 14px;
+      background: #faf7fd;
+      border: 1px solid #d5c5e8;
+      border-radius: 5px;
+      padding: 7px 10px;
+    }
+    .cenik-loading { font-size: 12px; color: #888; padding: 8px 0; }
+    .cenik-kategorie {
+      border: 1px solid #d5c5e8;
+      border-radius: 6px;
+      margin-bottom: 12px;
+      background: #fff;
+    }
+    .cenik-kategorie-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      cursor: pointer;
+      user-select: none;
+      border-radius: 6px;
+    }
+    .cenik-kategorie-header:hover { background: #EFE7F5; }
+    .cenik-kategorie-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #333;
+      flex: 1;
+    }
+    .cenik-badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 10px;
+      white-space: nowrap;
+    }
+    .cenik-badge-count { background: #79489c; color: #fff; }
+    .cenik-badge-sdilene { background: #e0e0e0; color: #555; }
+    .cenik-badge-eshop { background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
+    .cenik-chevron {
+      font-size: 12px;
+      color: #888;
+      transition: transform 0.18s;
+    }
+    .cenik-kategorie.open > .cenik-kategorie-header .cenik-chevron { transform: rotate(90deg); }
+    .cenik-kategorie-body { display: none; padding: 0 14px 12px; }
+    .cenik-kategorie.open > .cenik-kategorie-body { display: block; }
+
+    .cenik-cinnost {
+      border: 1px solid #eee;
+      border-radius: 5px;
+      margin-bottom: 8px;
+      background: #fafafa;
+    }
+    .cenik-cinnost-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      cursor: pointer;
+      user-select: none;
+      border-radius: 5px;
+    }
+    .cenik-cinnost-header:hover { background: #f3eef9; }
+    .cenik-cinnost-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #555;
+      flex: 1;
+    }
+    .cenik-cinnost.open > .cenik-cinnost-header .cenik-chevron { transform: rotate(90deg); }
+    .cenik-cinnost-body { display: none; padding: 6px 0 2px; }
+    .cenik-cinnost.open > .cenik-cinnost-body { display: block; }
+
+    .cenik-table-wrap { overflow-x: auto; }
+    .cenik-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    .cenik-table th {
+      background: #f3eef9;
+      color: #555;
+      font-weight: 600;
+      text-align: left;
+      padding: 5px 8px;
+      border-bottom: 1px solid #d5c5e8;
+      white-space: nowrap;
+    }
+    .cenik-table td {
+      padding: 4px 8px;
+      border-bottom: 1px solid #f0f0f0;
+      vertical-align: middle;
+    }
+    .cenik-table tr:last-child td { border-bottom: none; }
+    .cenik-table tr.filtered-out { display: none; }
+    .cenik-empty { font-size: 11px; color: #aaa; padding: 6px 8px; font-style: italic; }
+    .cenik-price { font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .cenik-badges { display: flex; gap: 4px; flex-wrap: wrap; }
+
     /* ─── Footer ──────────────────────────────────── */
     footer {
       background: #fff;
@@ -210,7 +325,17 @@
     <main class="content">
       <div class="section" id="section-cenik">
         <h2>Ceník</h2>
-        <p class="placeholder-text">Tato sekce se připravuje (fáze 5). Data se zatím spravují přímo v Supabase.</p>
+        <div id="cenik-banner" class="toast toast-warn" style="display:none;margin-bottom:10px;">
+          Mimo Pipedrive — admin funkce nedostupné
+        </div>
+        <p class="cenik-note">Náhled je jen ke čtení. Ceny se upravují zatím v DB / e-shopu; editor přijde později.</p>
+        <div class="cenik-toolbar">
+          <button class="btn btn-secondary" id="btn-load-cenik" type="button">Načíst / obnovit ceník</button>
+          <input class="cenik-filter" id="cenik-filter" type="text" placeholder="Filtrovat podle kódu nebo názvu…" disabled />
+        </div>
+        <div id="cenik-loading" class="cenik-loading" style="display:none;">Načítám ceník…</div>
+        <div id="cenik-toast" class="toast"></div>
+        <div id="cenik-tree"></div>
       </div>
       <div class="section" id="section-pravidla">
         <h2>Pravidla výpočtu</h2>
@@ -301,8 +426,12 @@
           if (typeof AppExtensionsSDK === 'undefined') throw new Error('SDK script se nenačetl (CDN)');
           // App settings extension: initialize bez argumentů (size umí jen panely/modaly)
           _sdk = await new AppExtensionsSDK().initialize();
+          // Share SDK with ceník module
+          if (window._cenikSetSdk) window._cenikSetSdk(_sdk, false);
         } catch (e) {
           _outsidePipedrive = true;
+          // Share outside-Pipedrive state with ceník module
+          if (window._cenikSetSdk) window._cenikSetSdk(null, true);
           console.error('[CN settings] SDK init selhal:', e);
           const banner = document.getElementById('mapovani-banner');
           banner.style.display = 'block';
@@ -596,6 +725,271 @@
 
       // ── Bootstrap ─────────────────────────────────────────────────────────
       initSdk();
+    })();
+  </script>
+
+  <script>
+    /* ═══════════════════════════════════════════════════════════════════════
+       Ceník preview — read-only grouped view of price_items
+       ═══════════════════════════════════════════════════════════════════════ */
+    (function () {
+      'use strict';
+
+      // ── Labels ────────────────────────────────────────────────────────────
+      const KATEGORIE_ORDER = ['nadrz', 'cov', 'septik'];
+      const KATEGORIE_LABELS = { nadrz: 'Nádrž', cov: 'ČOV', septik: 'Septik' };
+
+      const CINNOST_ORDER = ['svody', 'vsak', 'realizace_technologie'];
+      const CINNOST_LABELS = {
+        svody: 'Svody a rozvody vody',
+        vsak: 'Vsak',
+        realizace_technologie: 'Realizace technologie',
+      };
+
+      // ── State ─────────────────────────────────────────────────────────────
+      var _cenikLoaded = false;
+      var _allItems = [];   // raw items from API
+
+      // ── Shared helpers (re-use from outer scope) ──────────────────────────
+      // apiFetch, _outsidePipedrive, showToast are defined in the mapovani block.
+      // We reference them via the closure of the outer IIFE — but they live in a
+      // *different* IIFE. We need to expose them on window or duplicate. We'll
+      // expose a minimal subset on window from the outer IIFE instead.
+      // Actually they're in a separate IIFE — we duplicate the minimum needed here.
+
+      var _cenikApiBase = 'https://dvcxqjlbyajqnkylmdya.supabase.co/functions/v1/api';
+      var _cenikSdk = null;
+      var _cenikOutside = false;
+
+      // SDK is initialised once globally; we piggyback on the same SDK instance
+      // via a shared global reference.
+      window._cenikSetSdk = function (sdk, outside) {
+        _cenikSdk = sdk;
+        _cenikOutside = outside;
+      };
+
+      async function cenikGetToken() {
+        if (_cenikOutside || !_cenikSdk) throw new Error('outside Pipedrive');
+        var CommandKey = (typeof AppExtensionsSDK !== 'undefined' && AppExtensionsSDK.Command)
+          ? AppExtensionsSDK.Command.GET_SIGNED_TOKEN : 'get_signed_token';
+        var result = await _cenikSdk.execute(CommandKey);
+        return result.token;
+      }
+
+      async function cenikApiFetch(path) {
+        var token = await cenikGetToken();
+        var res = await fetch(_cenikApiBase + path, {
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        });
+        return res.json();
+      }
+
+      function showCenikToast(msg, type) {
+        var el = document.getElementById('cenik-toast');
+        el.textContent = msg;
+        el.className = 'toast show toast-' + type;
+        setTimeout(function () { el.classList.remove('show'); }, 5000);
+      }
+
+      // ── Membership rule ───────────────────────────────────────────────────
+      // item belongs to (kategorie K, cinnost C) if:
+      //   item.cinnost === C  AND  (item.kategorie === K OR item.kategorie === 'spolecne')
+      function itemBelongsTo(item, kat, cin) {
+        return item.cinnost === cin && (item.kategorie === kat || item.kategorie === 'spolecne');
+      }
+
+      // ── Format price ──────────────────────────────────────────────────────
+      function fmtPrice(n) {
+        return n.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' Kč';
+      }
+
+      // ── Build item row ────────────────────────────────────────────────────
+      function buildItemRow(item) {
+        var tr = document.createElement('tr');
+        tr.dataset.code = item.code.toLowerCase();
+        tr.dataset.name = item.name.toLowerCase();
+
+        var badges = '';
+        if (item.kategorie === 'spolecne') {
+          badges += '<span class="cenik-badge cenik-badge-sdilene">sdílené</span>';
+        }
+        if (item.zdroj === 'eshop') {
+          badges += '<span class="cenik-badge cenik-badge-eshop">e-shop</span>';
+        }
+
+        tr.innerHTML =
+          '<td style="font-family:monospace;white-space:nowrap;font-size:10px;color:#555">' + escHtml(item.code) + '</td>' +
+          '<td>' + escHtml(item.name) + '</td>' +
+          '<td style="white-space:nowrap">' + escHtml(item.unit) + '</td>' +
+          '<td class="cenik-price">' + fmtPrice(item.unitPrice) + '</td>' +
+          '<td><div class="cenik-badges">' + badges + '</div></td>';
+        return tr;
+      }
+
+      function escHtml(s) {
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      }
+
+      // ── Build collapsible činnost sub-section ─────────────────────────────
+      function buildCinnostSection(kat, cin, items) {
+        var div = document.createElement('div');
+        div.className = 'cenik-cinnost';
+
+        var header = document.createElement('div');
+        header.className = 'cenik-cinnost-header';
+        header.innerHTML =
+          '<span class="cenik-cinnost-title">' + escHtml(CINNOST_LABELS[cin] || cin) + '</span>' +
+          '<span class="cenik-badge cenik-badge-count">' + items.length + '</span>' +
+          '<span class="cenik-chevron">▶</span>';
+
+        var body = document.createElement('div');
+        body.className = 'cenik-cinnost-body';
+
+        if (items.length === 0) {
+          body.innerHTML = '<p class="cenik-empty">Zatím žádné položky.</p>';
+        } else {
+          var wrap = document.createElement('div');
+          wrap.className = 'cenik-table-wrap';
+          var tbl = document.createElement('table');
+          tbl.className = 'cenik-table';
+          tbl.innerHTML =
+            '<thead><tr>' +
+            '<th>Kód</th><th>Název</th><th>MJ</th>' +
+            '<th>Nákladová cena / MJ</th><th></th>' +
+            '</tr></thead>';
+          var tbody = document.createElement('tbody');
+          items.forEach(function (item) { tbody.appendChild(buildItemRow(item)); });
+          tbl.appendChild(tbody);
+          wrap.appendChild(tbl);
+          body.appendChild(wrap);
+        }
+
+        header.addEventListener('click', function () {
+          div.classList.toggle('open');
+        });
+
+        div.appendChild(header);
+        div.appendChild(body);
+        return div;
+      }
+
+      // ── Build collapsible kategorie panel ─────────────────────────────────
+      function buildKategoriePanel(kat, allItems) {
+        var panel = document.createElement('div');
+        panel.className = 'cenik-kategorie';
+        panel.dataset.kat = kat;
+
+        // Count all items that belong to this kategorie (across all cinnosti)
+        var totalCount = 0;
+        CINNOST_ORDER.forEach(function (cin) {
+          totalCount += allItems.filter(function (i) { return itemBelongsTo(i, kat, cin); }).length;
+        });
+
+        var header = document.createElement('div');
+        header.className = 'cenik-kategorie-header';
+        header.innerHTML =
+          '<span class="cenik-kategorie-title">' + escHtml(KATEGORIE_LABELS[kat] || kat) + '</span>' +
+          '<span class="cenik-badge cenik-badge-count">' + totalCount + '</span>' +
+          '<span class="cenik-chevron">▶</span>';
+
+        var body = document.createElement('div');
+        body.className = 'cenik-kategorie-body';
+
+        CINNOST_ORDER.forEach(function (cin) {
+          var cinItems = allItems.filter(function (i) { return itemBelongsTo(i, kat, cin); });
+          body.appendChild(buildCinnostSection(kat, cin, cinItems));
+        });
+
+        header.addEventListener('click', function () {
+          panel.classList.toggle('open');
+        });
+
+        panel.appendChild(header);
+        panel.appendChild(body);
+        return panel;
+      }
+
+      // ── Render full tree ──────────────────────────────────────────────────
+      function renderTree(items) {
+        var tree = document.getElementById('cenik-tree');
+        tree.innerHTML = '';
+        KATEGORIE_ORDER.forEach(function (kat) {
+          tree.appendChild(buildKategoriePanel(kat, items));
+        });
+      }
+
+      // ── Filter logic ──────────────────────────────────────────────────────
+      function applyFilter(q) {
+        q = q.trim().toLowerCase();
+        var panels = document.querySelectorAll('#cenik-tree .cenik-kategorie');
+        panels.forEach(function (panel) {
+          var kat = panel.dataset.kat;
+          var cinSections = panel.querySelectorAll('.cenik-cinnost');
+          var panelHasAny = false;
+
+          cinSections.forEach(function (cs) {
+            var rows = cs.querySelectorAll('tbody tr');
+            var sectionHasAny = false;
+            rows.forEach(function (tr) {
+              var match = !q || tr.dataset.code.includes(q) || tr.dataset.name.includes(q);
+              tr.classList.toggle('filtered-out', !match);
+              if (match) sectionHasAny = true;
+            });
+            // Show/hide empty message
+            var emptyMsg = cs.querySelector('.cenik-empty');
+            if (emptyMsg) {
+              emptyMsg.style.display = (q && !sectionHasAny) ? 'none' : '';
+            }
+            if (sectionHasAny) panelHasAny = true;
+          });
+
+          panel.style.display = (q && !panelHasAny) ? 'none' : '';
+        });
+      }
+
+      // ── Load ceník ────────────────────────────────────────────────────────
+      async function loadCenik() {
+        if (_cenikOutside) {
+          document.getElementById('cenik-banner').style.display = 'block';
+          return;
+        }
+        var loading = document.getElementById('cenik-loading');
+        loading.style.display = 'block';
+        document.getElementById('cenik-filter').disabled = true;
+        try {
+          var res = await cenikApiFetch('/admin/price-items');
+          if (!res.ok) throw new Error(res.error || 'Chyba při načítání ceníku');
+          _allItems = res.items || [];
+          renderTree(_allItems);
+          document.getElementById('cenik-filter').disabled = false;
+          showCenikToast('Ceník načten — ' + res.count + ' položek', 'success');
+        } catch (err) {
+          showCenikToast('Chyba: ' + err.message, 'error');
+        } finally {
+          loading.style.display = 'none';
+        }
+      }
+
+      // ── Event wiring ──────────────────────────────────────────────────────
+      document.getElementById('btn-load-cenik').addEventListener('click', function () {
+        _cenikLoaded = true;
+        loadCenik();
+      });
+
+      document.getElementById('cenik-filter').addEventListener('input', function () {
+        applyFilter(this.value);
+      });
+
+      // Load when section becomes visible (nav click) — lazy, first time only
+      document.querySelectorAll('.nav-item').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          if (btn.dataset.section === 'cenik' && !_cenikLoaded) {
+            _cenikLoaded = true;
+            loadCenik();
+          }
+        });
+      });
+
     })();
   </script>
 </body>
