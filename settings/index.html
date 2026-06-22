@@ -608,7 +608,8 @@
 
       // ── Read row data from table ──────────────────────────────────────────
       function collectMappings() {
-        const rows = document.querySelectorAll('#mapovani-tbody tr');
+        // jen přímé řádky tabulky — ne vnořené <tr> z enum pod-tabulky (.enum-map-wrap)
+        const rows = document.querySelectorAll('#mapovani-tbody > tr');
         const mappings = [];
         let valid = true;
         rows.forEach(function (tr) {
