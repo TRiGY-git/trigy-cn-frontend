@@ -249,6 +249,11 @@
         return new Intl.NumberFormat('cs-CZ', { style: 'currency', currency: 'CZK', maximumFractionDigits: 0 }).format(total);
       }
 
+      function formatMargin(margin) {
+        if (margin === null || margin === undefined) return '—';
+        return new Intl.NumberFormat('cs-CZ', { style: 'currency', currency: 'CZK', maximumFractionDigits: 0 }).format(margin);
+      }
+
       function formatDate(isoStr) {
         if (!isoStr) return '—';
         return new Date(isoStr).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric', year: 'numeric' });
@@ -273,7 +278,7 @@
               return '<tr>' +
                 '<td>' + q.quoteNumber + '</td>' +
                 '<td>' + formatTotal(q.total) + '</td>' +
-                '<td>—</td>' +
+                '<td>' + formatMargin(q.margin) + '</td>' +
                 '<td>' + formatDate(q.createdAt) + '</td>' +
                 '</tr>';
             }).join('');
