@@ -295,6 +295,40 @@
     .cenik-price { font-variant-numeric: tabular-nums; white-space: nowrap; }
     .cenik-badges { display: flex; gap: 4px; flex-wrap: wrap; }
 
+    /* ─── Výpočtové položky ──────────────────────────── */
+    .vypoctove-note {
+      font-size: 11px;
+      color: #555;
+      background: #faf7fd;
+      border: 1px solid #d5c5e8;
+      border-radius: 5px;
+      padding: 8px 12px;
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+    .vypoctove-table-wrap { overflow-x: auto; }
+    .vypoctove-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    .vypoctove-table th {
+      background: #f3eef9;
+      color: #555;
+      font-weight: 600;
+      text-align: left;
+      padding: 5px 8px;
+      border-bottom: 1px solid #d5c5e8;
+      white-space: nowrap;
+    }
+    .vypoctove-table td {
+      padding: 4px 8px;
+      border-bottom: 1px solid #f0f0f0;
+      vertical-align: middle;
+    }
+    .vypoctove-table tr:last-child td { border-bottom: none; }
+    .vypoctove-table tr.vy-rucne { background: #fffbf5; }
+    .badge-auto   { background: #e8f5e9; color: #256029; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 10px; white-space: nowrap; display: inline-block; }
+    .badge-rucne  { background: #fff3e0; color: #e65100; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 10px; white-space: nowrap; display: inline-block; }
+    .badge-none   { background: #f0f0f0; color: #999;    font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 10px; white-space: nowrap; display: inline-block; }
+    .vypoctove-loading { font-size: 12px; color: #888; padding: 8px 0; }
+
     /* ─── Footer ──────────────────────────────────── */
     footer {
       background: #fff;
@@ -316,6 +350,7 @@
   <div class="layout">
     <nav class="sidebar">
       <button class="nav-item" data-section="cenik" type="button">Ceník</button>
+      <button class="nav-item" data-section="vypoctove" type="button">Výpočtové položky</button>
       <button class="nav-item" data-section="pravidla" type="button">Pravidla výpočtu</button>
       <button class="nav-item" data-section="sablony" type="button">Šablony dokumentu</button>
       <button class="nav-item" data-section="mapovani" type="button">Mapování polí</button>
@@ -337,6 +372,34 @@
         <div id="cenik-toast" class="toast"></div>
         <div id="cenik-tree"></div>
       </div>
+      <div class="section" id="section-vypoctove">
+        <h2>Výpočtové položky</h2>
+        <div id="vypoctove-banner" class="toast toast-warn" style="display:none;margin-bottom:10px;">
+          Mimo Pipedrive — admin funkce nedostupné
+        </div>
+        <p class="vypoctove-note">Co engine dopočítá automaticky vs. co je potřeba zadat (pole na dealu / vstup). Zahrnuje vše kromě produktů ČOV a nádrží.</p>
+        <div class="cenik-toolbar">
+          <button class="btn btn-secondary" id="btn-load-vypoctove" type="button">Načíst položky</button>
+        </div>
+        <div id="vypoctove-loading" class="vypoctove-loading" style="display:none;">Načítám položky…</div>
+        <div id="vypoctove-toast" class="toast"></div>
+        <div id="vypoctove-table-wrap" class="vypoctove-table-wrap" style="display:none;">
+          <table class="vypoctove-table" id="vypoctove-table">
+            <thead>
+              <tr>
+                <th>Kód</th>
+                <th>Název</th>
+                <th>Cena / MJ</th>
+                <th>MJ</th>
+                <th>Režim</th>
+                <th>Popis výpočtu</th>
+              </tr>
+            </thead>
+            <tbody id="vypoctove-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
       <div class="section" id="section-pravidla">
         <h2>Pravidla výpočtu</h2>
         <p class="placeholder-text">Tato sekce se připravuje (fáze 5). Data se zatím spravují přímo v Supabase.</p>
@@ -426,12 +489,14 @@
           if (typeof AppExtensionsSDK === 'undefined') throw new Error('SDK script se nenačetl (CDN)');
           // App settings extension: initialize bez argumentů (size umí jen panely/modaly)
           _sdk = await new AppExtensionsSDK().initialize();
-          // Share SDK with ceník module
+          // Share SDK with ceník + výpočtové položky modules
           if (window._cenikSetSdk) window._cenikSetSdk(_sdk, false);
+          if (window._vypoctoveSetSdk) window._vypoctoveSetSdk(_sdk, false);
         } catch (e) {
           _outsidePipedrive = true;
-          // Share outside-Pipedrive state with ceník module
+          // Share outside-Pipedrive state with ceník + výpočtové položky modules
           if (window._cenikSetSdk) window._cenikSetSdk(null, true);
+          if (window._vypoctoveSetSdk) window._vypoctoveSetSdk(null, true);
           console.error('[CN settings] SDK init selhal:', e);
           const banner = document.getElementById('mapovani-banner');
           banner.style.display = 'block';
@@ -993,5 +1058,132 @@
 
     })();
   </script>
+  <script>
+    /* ═══════════════════════════════════════════════════════════════════════
+       Výpočtové položky — non-product items with vypocet/vypocetPopis
+       ═══════════════════════════════════════════════════════════════════════ */
+    (function () {
+      'use strict';
+
+      var _vypoctoveLoaded = false;
+
+      var _vpApiBase = 'https://dvcxqjlbyajqnkylmdya.supabase.co/functions/v1/api';
+      var _vpSdk = null;
+      var _vpOutside = false;
+
+      // Piggyback on the same SDK instance via shared global
+      window._vypoctoveSetSdk = function (sdk, outside) {
+        _vpSdk = sdk;
+        _vpOutside = outside;
+      };
+
+      async function vpGetToken() {
+        if (_vpOutside || !_vpSdk) throw new Error('outside Pipedrive');
+        var CommandKey = (typeof AppExtensionsSDK !== 'undefined' && AppExtensionsSDK.Command)
+          ? AppExtensionsSDK.Command.GET_SIGNED_TOKEN : 'get_signed_token';
+        var result = await _vpSdk.execute(CommandKey);
+        return result.token;
+      }
+
+      async function vpApiFetch(path) {
+        var token = await vpGetToken();
+        var res = await fetch(_vpApiBase + path, {
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        });
+        return res.json();
+      }
+
+      function showVpToast(msg, type) {
+        var el = document.getElementById('vypoctove-toast');
+        el.textContent = msg;
+        el.className = 'toast show toast-' + type;
+        setTimeout(function () { el.classList.remove('show'); }, 5000);
+      }
+
+      function escHtml(s) {
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      }
+
+      function fmtPrice(n) {
+        return n.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' Kč';
+      }
+
+      function modeBadge(vypocet) {
+        if (vypocet === 'auto')  return '<span class="badge-auto">auto</span>';
+        if (vypocet === 'rucne') return '<span class="badge-rucne">ručně</span>';
+        return '<span class="badge-none">—</span>';
+      }
+
+      function renderTable(items) {
+        // Filter: exclude COV-* and NADRZ-*
+        var filtered = items.filter(function (i) {
+          return !i.code.startsWith('COV-') && !i.code.startsWith('NADRZ-');
+        });
+
+        // Sort: ručně first (highlighted), then auto, then others
+        filtered.sort(function (a, b) {
+          var order = { rucne: 0, auto: 1 };
+          var oa = (a.vypocet in order) ? order[a.vypocet] : 2;
+          var ob = (b.vypocet in order) ? order[b.vypocet] : 2;
+          if (oa !== ob) return oa - ob;
+          return a.code.localeCompare(b.code);
+        });
+
+        var tbody = document.getElementById('vypoctove-tbody');
+        tbody.innerHTML = '';
+        filtered.forEach(function (item) {
+          var tr = document.createElement('tr');
+          if (item.vypocet === 'rucne') tr.className = 'vy-rucne';
+          tr.innerHTML =
+            '<td style="font-family:monospace;white-space:nowrap;font-size:10px;color:#555">' + escHtml(item.code) + '</td>' +
+            '<td>' + escHtml(item.name) + '</td>' +
+            '<td style="white-space:nowrap;font-variant-numeric:tabular-nums">' + fmtPrice(item.unitPrice) + '</td>' +
+            '<td style="white-space:nowrap">' + escHtml(item.unit) + '</td>' +
+            '<td>' + modeBadge(item.vypocet) + '</td>' +
+            '<td style="color:#555;font-size:11px">' + escHtml(item.vypocetPopis || '') + '</td>';
+          tbody.appendChild(tr);
+        });
+
+        document.getElementById('vypoctove-table-wrap').style.display = 'block';
+        showVpToast('Načteno ' + filtered.length + ' položek (bez ČOV produktů a nádrží)', 'success');
+      }
+
+      async function loadVypoctove() {
+        if (_vpOutside) {
+          document.getElementById('vypoctove-banner').style.display = 'block';
+          return;
+        }
+        var loading = document.getElementById('vypoctove-loading');
+        loading.style.display = 'block';
+        document.getElementById('vypoctove-table-wrap').style.display = 'none';
+        try {
+          var res = await vpApiFetch('/admin/price-items');
+          if (!res.ok) throw new Error(res.error || 'Chyba při načítání ceníku');
+          renderTable(res.items || []);
+        } catch (err) {
+          showVpToast('Chyba: ' + err.message, 'error');
+        } finally {
+          loading.style.display = 'none';
+        }
+      }
+
+      document.getElementById('btn-load-vypoctove').addEventListener('click', function () {
+        _vypoctoveLoaded = true;
+        loadVypoctove();
+      });
+
+      // Lazy-load on first open
+      document.querySelectorAll('.nav-item').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          if (btn.dataset.section === 'vypoctove' && !_vypoctoveLoaded) {
+            _vypoctoveLoaded = true;
+            loadVypoctove();
+          }
+        });
+      });
+
+    })();
+  </script>
+
 </body>
 </html>
