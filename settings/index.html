@@ -94,6 +94,12 @@
       color: #222;
       margin-bottom: 12px;
     }
+    .section-lead {
+      max-width: 760px;
+      color: #555;
+      line-height: 1.55;
+      margin: -3px 0 16px;
+    }
     .placeholder-text {
       font-size: 13px;
       color: #777;
@@ -102,6 +108,80 @@
       border-radius: 6px;
       padding: 16px;
       line-height: 1.6;
+    }
+
+    /* Readiness overview */
+    .readiness-intro {
+      max-width: 760px;
+      color: #555;
+      line-height: 1.55;
+      margin-bottom: 18px;
+    }
+    .readiness-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 12px;
+      max-width: 900px;
+    }
+    .readiness-card {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 7px;
+      padding: 14px;
+      min-height: 146px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .readiness-card h3 { font-size: 14px; color: #333; }
+    .readiness-card p { color: #666; font-size: 12px; line-height: 1.45; }
+    .readiness-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #6a5a00;
+    }
+    .readiness-status::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #e0a800;
+    }
+    .readiness-status.ready { color: #256029; }
+    .readiness-status.ready::before { background: #2e7d32; }
+    .readiness-status.error { color: #a93226; }
+    .readiness-status.error::before { background: #c0392b; }
+    .readiness-card .btn { margin-top: auto; }
+
+    /* Mapping guidance */
+    .mapping-guidance {
+      background: #fff;
+      border: 1px solid #d5c5e8;
+      border-radius: 6px;
+      margin-bottom: 14px;
+      overflow: hidden;
+    }
+    .mapping-guidance summary {
+      cursor: pointer;
+      padding: 10px 12px;
+      font-weight: 600;
+      color: #4b2764;
+      background: #faf7fd;
+    }
+    .mapping-guidance-body { padding: 10px 12px 12px; }
+    .mapping-guidance-body > p { color: #555; line-height: 1.5; margin-bottom: 8px; }
+    .mapping-key-list { margin: 0 0 8px 18px; color: #444; line-height: 1.55; }
+    .mapping-key-list code {
+      color: #4b2764;
+      background: #f3eef9;
+      border-radius: 3px;
+      padding: 1px 4px;
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 11px;
     }
 
     /* ─── Mapování polí editor ────────────────────────────── */
@@ -348,16 +428,37 @@
   </header>
 
   <div class="layout">
-    <nav class="sidebar">
-      <button class="nav-item" data-section="cenik" type="button">Ceník</button>
-      <button class="nav-item" data-section="vypoctove" type="button">Výpočtové položky</button>
-      <button class="nav-item" data-section="pravidla" type="button">Pravidla výpočtu</button>
-      <button class="nav-item" data-section="sablony" type="button">Šablony dokumentu</button>
-      <button class="nav-item" data-section="mapovani" type="button">Mapování polí</button>
-      <button class="nav-item" data-section="historie" type="button">Historie CN</button>
+    <nav class="sidebar" aria-label="Postup nastavení">
+      <button class="nav-item" data-section="prehled" type="button">Připravenost</button>
+      <button class="nav-item" data-section="cenik" type="button">1. Ceny v nabídce</button>
+      <button class="nav-item" data-section="mapovani" type="button">2. Vstupy z Pipedrive</button>
+      <button class="nav-item" data-section="vypoctove" type="button">3. Výpočet položek</button>
     </nav>
 
     <main class="content">
+      <div class="section" id="section-prehled">
+        <h2>Připravenost generování nabídek</h2>
+        <p class="readiness-intro">Před vytvořením první cenové nabídky ověřte připojení k Pipedrive, aktuálnost ceníku a mapování vstupů z dealu. Stav se aktualizuje při práci v jednotlivých krocích.</p>
+        <div class="readiness-grid">
+          <article class="readiness-card">
+            <h3>Pipedrive</h3>
+            <span id="readiness-pipedrive-status" class="readiness-status" aria-live="polite">Ověřuji připojení</span>
+            <p id="readiness-pipedrive-detail">Načítá se zabezpečené připojení pro administraci.</p>
+          </article>
+          <article class="readiness-card">
+            <h3>Ceník</h3>
+            <span id="readiness-cenik-status" class="readiness-status" aria-live="polite">Zatím neověřeno</span>
+            <p id="readiness-cenik-detail">Načtěte ceník a zkontrolujte, zda obsahuje použité položky.</p>
+            <button class="btn btn-secondary" type="button" data-open-section="cenik">Otevřít ceník</button>
+          </article>
+          <article class="readiness-card">
+            <h3>Vstupy z Pipedrive</h3>
+            <span id="readiness-mapovani-status" class="readiness-status" aria-live="polite">Zatím neověřeno</span>
+            <p id="readiness-mapovani-detail">Načtěte mapování a zkontrolujte povinné vstupy pro vybrané produkty.</p>
+            <button class="btn btn-secondary" type="button" data-open-section="mapovani">Otevřít vstupy</button>
+          </article>
+        </div>
+      </div>
       <div class="section" id="section-cenik">
         <h2>Ceník</h2>
         <div id="cenik-banner" class="toast toast-warn" style="display:none;margin-bottom:10px;">
@@ -400,19 +501,26 @@
         </div>
       </div>
 
-      <div class="section" id="section-pravidla">
-        <h2>Pravidla výpočtu</h2>
-        <p class="placeholder-text">Tato sekce se připravuje (fáze 5). Data se zatím spravují přímo v Supabase.</p>
-      </div>
-      <div class="section" id="section-sablony">
-        <h2>Šablony dokumentu</h2>
-        <p class="placeholder-text">Tato sekce se připravuje (fáze 5). Data se zatím spravují přímo v Supabase.</p>
-      </div>
       <div class="section" id="section-mapovani">
-        <h2>Mapování polí</h2>
+        <h2>Vstupy z Pipedrive</h2>
         <div id="mapovani-banner" class="toast toast-warn" style="display:none;margin-bottom:10px;">
           Mimo Pipedrive — admin funkce nedostupné
         </div>
+        <p class="section-lead">Přiřaďte pole dealu ke vstupům použitým pro výpočet nabídky. Změny platí pro nově vytvářené nabídky; existující snapshoty se nemění.</p>
+        <details class="mapping-guidance" open>
+          <summary>Doporučené interní klíče a způsob mapování</summary>
+          <div class="mapping-guidance-body">
+            <p>Tyto klíče používá současný výpočetní engine. Pro výběrové pole použijte transformaci <strong>Výčet</strong> a přiřaďte hodnoty Pipedrive na interní hodnoty, které engine očekává.</p>
+            <ul class="mapping-key-list">
+              <li><code>product</code> — hlavní produkt; typ <strong>Hlavní produkt</strong>, typicky hodnoty <code>COV</code> nebo <code>NADRZ</code>.</li>
+              <li><code>typ_cov</code> a <code>typ_nadrze</code> — konkrétní varianta produktu; typ <strong>Vstupní hodnota</strong>.</li>
+              <li><code>delka_potrubi</code> a <code>pocet_dni_realizace</code> — číselné hodnoty; transformace <strong>Číslo</strong>.</li>
+              <li><code>minidumper</code>, <code>vysoka_spodni_voda</code> a <code>okruh_wc</code> — ano/ne; transformace <strong>Ano/ne</strong>.</li>
+              <li><code>betonaz</code> — způsob betonáže; transformace <strong>Výčet</strong>, např. na hodnotu <code>obetonovani</code>.</li>
+            </ul>
+            <p>Místně závislé skutečnosti (geologie, doprava nebo přístupnost) nemapujte jako automatický odhad. Musí mít potvrzený vstup z dealu.</p>
+          </div>
+        </details>
         <div class="mapovani-toolbar">
           <button class="btn btn-secondary" id="btn-refresh-fields" type="button">Obnovit pole z Pipedrive</button>
           <button class="btn btn-secondary" id="btn-add-row" type="button">Přidat řádek</button>
@@ -424,7 +532,7 @@
             <thead>
               <tr>
                 <th style="min-width:120px">Interní klíč</th>
-                <th style="min-width:110px">Typ</th>
+                <th style="min-width:135px">Použití hodnoty</th>
                 <th style="min-width:120px">Transformace</th>
                 <th style="min-width:180px">Pipedrive pole</th>
                 <th></th>
@@ -434,10 +542,6 @@
           </table>
         </div>
         <div id="mapovani-toast" class="toast"></div>
-      </div>
-      <div class="section" id="section-historie">
-        <h2>Historie CN</h2>
-        <p class="placeholder-text">Přehled vygenerovaných nabídek se objeví po fázi 3.</p>
       </div>
     </main>
   </div>
@@ -458,9 +562,25 @@
         });
       }
 
+      window.cnShowSettingsSection = showSection;
+      window.cnSetReadiness = function (name, state, detail) {
+        const status = document.getElementById('readiness-' + name + '-status');
+        const detailEl = document.getElementById('readiness-' + name + '-detail');
+        if (!status || !detailEl) return;
+        status.textContent = state.label;
+        status.className = 'readiness-status' + (state.tone ? ' ' + state.tone : '');
+        detailEl.textContent = detail;
+      };
+
       navBtns.forEach(function (btn) {
         btn.addEventListener('click', function () {
           showSection(btn.dataset.section);
+        });
+      });
+
+      document.querySelectorAll('[data-open-section]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          showSection(btn.dataset.openSection);
         });
       });
 
@@ -489,11 +609,15 @@
           if (typeof AppExtensionsSDK === 'undefined') throw new Error('SDK script se nenačetl (CDN)');
           // App settings extension: initialize bez argumentů (size umí jen panely/modaly)
           _sdk = await new AppExtensionsSDK().initialize();
+          window.cnSetReadiness('pipedrive', { label: 'Připojeno', tone: 'ready' },
+            'Přístup k administraci je ověřen přes Pipedrive.');
           // Share SDK with ceník + výpočtové položky modules
           if (window._cenikSetSdk) window._cenikSetSdk(_sdk, false);
           if (window._vypoctoveSetSdk) window._vypoctoveSetSdk(_sdk, false);
         } catch (e) {
           _outsidePipedrive = true;
+          window.cnSetReadiness('pipedrive', { label: 'Nepřipojeno', tone: 'error' },
+            'Otevřete tuto stránku v Pipedrive, aby bylo možné ověřit oprávnění.');
           // Share outside-Pipedrive state with ceník + výpočtové položky modules
           if (window._cenikSetSdk) window._cenikSetSdk(null, true);
           if (window._vypoctoveSetSdk) window._vypoctoveSetSdk(null, true);
@@ -586,7 +710,7 @@
         const tdKey = document.createElement('td');
         const inpKey = document.createElement('input');
         inpKey.type = 'text';
-        inpKey.placeholder = 'napr. product';
+        inpKey.placeholder = 'napr. typ_cov';
         inpKey.pattern = '^[a-z0-9_]+$';
         inpKey.value = mapping ? mapping.internalKey : '';
         tdKey.appendChild(inpKey);
@@ -595,11 +719,15 @@
         // 2. target (Typ)
         const tdTarget = document.createElement('td');
         const selTarget = document.createElement('select');
-        ['product', 'variable', 'option'].forEach(function (v) {
+        [
+          { value: 'product', label: 'Hlavní produkt' },
+          { value: 'variable', label: 'Vstupní hodnota' },
+          { value: 'option', label: 'Volba ano/ne' },
+        ].forEach(function (item) {
           const o = document.createElement('option');
-          o.value = v;
-          o.textContent = v;
-          if (mapping && mapping.target === v) o.selected = true;
+          o.value = item.value;
+          o.textContent = item.label;
+          if (mapping && mapping.target === item.value) o.selected = true;
           selTarget.appendChild(o);
         });
         tdTarget.appendChild(selTarget);
@@ -608,11 +736,16 @@
         // 3. transform kind
         const tdTransform = document.createElement('td');
         const selTransform = document.createElement('select');
-        ['string', 'number', 'boolean', 'enum'].forEach(function (v) {
+        [
+          { value: 'string', label: 'Text' },
+          { value: 'number', label: 'Číslo' },
+          { value: 'boolean', label: 'Ano/ne' },
+          { value: 'enum', label: 'Výčet' },
+        ].forEach(function (item) {
           const o = document.createElement('option');
-          o.value = v;
-          o.textContent = v;
-          if (mapping && mapping.transform && mapping.transform.kind === v) o.selected = true;
+          o.value = item.value;
+          o.textContent = item.label;
+          if (mapping && mapping.transform && mapping.transform.kind === item.value) o.selected = true;
           selTransform.appendChild(o);
         });
         tdTransform.appendChild(selTransform);
@@ -723,7 +856,13 @@
           mappingsRes.mappings.forEach(function (m) {
             tbody.appendChild(buildRow(m));
           });
+          const count = mappingsRes.mappings.length;
+          window.cnSetReadiness('mapovani',
+            { label: count > 0 ? 'Načteno' : 'Chybí mapování', tone: count > 0 ? 'ready' : 'error' },
+            count > 0 ? count + ' vstupů je připraveno ke kontrole.' : 'Přidejte a uložte alespoň povinné vstupy.');
         } catch (err) {
+          window.cnSetReadiness('mapovani', { label: 'Nelze ověřit', tone: 'error' },
+            'Mapování se nepodařilo načíst. Zkontrolujte připojení k Pipedrive.');
           showToast('Chyba: ' + err.message, 'error');
         } finally {
           loading.style.display = 'none';
@@ -766,6 +905,9 @@
           });
           if (!res.ok) throw new Error(JSON.stringify(res.error));
           showToast('Mapování uloženo (' + res.count + ' záznamů)', 'success');
+          window.cnSetReadiness('mapovani',
+            { label: 'Uloženo', tone: 'ready' },
+            res.count + ' vstupů je uloženo pro generování nových nabídek.');
         } catch (err) {
           showToast('Chyba ukládání: ' + err.message, 'error');
         }
@@ -1029,7 +1171,11 @@
           renderTree(_allItems);
           document.getElementById('cenik-filter').disabled = false;
           showCenikToast('Ceník načten — ' + res.count + ' položek', 'success');
+          window.cnSetReadiness('cenik', { label: 'Načteno', tone: 'ready' },
+            res.count + ' ceníkových položek je k dispozici pro kontrolu.');
         } catch (err) {
+          window.cnSetReadiness('cenik', { label: 'Nelze ověřit', tone: 'error' },
+            'Ceník se nepodařilo načíst. Zkontrolujte připojení k Pipedrive.');
           showCenikToast('Chyba: ' + err.message, 'error');
         } finally {
           loading.style.display = 'none';
