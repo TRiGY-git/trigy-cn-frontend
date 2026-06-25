@@ -130,6 +130,25 @@
       color: #7d6b88;
       overflow-wrap: anywhere;
     }
+    .source-badge {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      border-radius: 999px;
+      padding: 2px 7px;
+      font-size: 11px;
+      font-weight: 700;
+      background: #f0e8f6;
+      color: #5f3c79;
+    }
+    .source-badge.implicit {
+      background: #eaf6ee;
+      color: #256535;
+    }
+    .source-badge.direct {
+      background: #fff3d9;
+      color: #765600;
+    }
     .helper {
       margin-top: 5px;
       font-size: 12px;
@@ -193,6 +212,15 @@
       text-align: center;
       color: #6f6478;
     }
+    .direct-picker {
+      padding: 12px 14px;
+      border-bottom: 1px solid #f0e9f4;
+      display: grid;
+      gap: 8px;
+    }
+    .direct-picker label {
+      font-size: 13px;
+    }
     @media (max-width: 680px) {
       .field-row { grid-template-columns: 1fr; }
       header, main, .controls { padding-left: 12px; padding-right: 12px; }
@@ -236,7 +264,10 @@
       var sdkReady = false;
       var dealId = parseDealId();
       var fields = [];
+      var availableUnmappedFields = [];
       var lastPayload = null;
+      var DIRECT_FIELD_PREFIX = '__pdfield__';
+      var MODAL_SIZE = { width: 900, height: 760 };
 
       var form = document.getElementById('manual-form');
       var message = document.getElementById('message');
@@ -363,10 +394,16 @@
 
       function renderField(field) {
         var required = field.required ? ' <span class="required">*</span>' : '';
+        var source = field.mappingSource || 'saved';
+        var sourceLabel = source === 'direct'
+          ? 'přímý test'
+          : (source === 'implicit' ? 'auto podle názvu' : 'mapování');
+        var keyLabel = source === 'direct' ? 'nenalinkováno: přímý zápis do Pipedrive pole' : field.internalKey;
         return '<div class="field-row" data-internal-key="' + escapeHtml(field.internalKey) + '">' +
           '<div class="field-label">' +
             '<label for="field-' + escapeHtml(field.internalKey) + '">' + escapeHtml(field.label) + required + '</label>' +
-            '<div class="key">' + escapeHtml(field.internalKey) + '</div>' +
+            '<span class="source-badge ' + escapeHtml(source) + '">' + escapeHtml(sourceLabel) + '</span>' +
+            '<div class="key">' + escapeHtml(keyLabel) + '</div>' +
             '<div class="key">' + escapeHtml(field.pipedriveFieldKey) + '</div>' +
           '</div>' +
           '<div>' +
@@ -376,13 +413,96 @@
         '</div>';
       }
 
+      function directInternalKey(fieldKey) {
+        return DIRECT_FIELD_PREFIX + fieldKey;
+      }
+
+      function directFieldHelper() {
+        return 'Testovací přímý zápis do Pipedrive pole. Do výpočtu se hodnota použije automaticky jen tehdy, když název pole odpovídá internímu klíči, nebo když pole později nalinkuješ v nastavení.';
+      }
+
+      function buildDirectDescriptor(meta) {
+        return {
+          internalKey: directInternalKey(meta.key),
+          pipedriveFieldKey: meta.key,
+          target: 'variable',
+          transform: { kind: 'string' },
+          label: meta.name,
+          fieldType: meta.fieldType || 'varchar',
+          options: meta.options || null,
+          value: meta.value,
+          group: 'direct_fields',
+          groupLabel: 'Testovací nenalinkovaná pole',
+          required: false,
+          helper: directFieldHelper(),
+          mappingSource: 'direct',
+        };
+      }
+
+      function directPickerOptions() {
+        var used = new Set(fields.map(function (field) { return field.pipedriveFieldKey; }));
+        var remaining = availableUnmappedFields.filter(function (field) { return !used.has(field.key); });
+        if (!remaining.length) return '<option value="">Všechna nenalinkovaná pole jsou přidaná</option>';
+        return '<option value="">— vyber pole pro test —</option>' +
+          remaining.map(function (field) {
+            return '<option value="' + escapeHtml(field.key) + '">' +
+              escapeHtml(field.name + ' · ' + field.fieldType) +
+              '</option>';
+          }).join('');
+      }
+
+      function renderDirectPicker() {
+        if (!availableUnmappedFields.length) return '';
+        return '<section class="group">' +
+          '<h2><span>Testovací nenalinkovaná pole</span><span class="group-count">' + availableUnmappedFields.length + '</span></h2>' +
+          '<div class="direct-picker">' +
+            '<label for="direct-field-picker">Přidat Pipedrive pole bez trvalého mapování</label>' +
+            '<select id="direct-field-picker">' + directPickerOptions() + '</select>' +
+            '<div class="helper">' + escapeHtml(directFieldHelper()) + '</div>' +
+          '</div>' +
+          '<div id="direct-fields"></div>' +
+          '</section>';
+      }
+
+      function bindInitialValue(control) {
+        if (!control || !control.name) return;
+        control.dataset.initial = JSON.stringify(readControl(control.name));
+      }
+
+      function bindDirectPicker() {
+        var picker = document.getElementById('direct-field-picker');
+        if (!picker) return;
+        picker.addEventListener('change', function () {
+          if (!picker.value) return;
+          appendDirectField(picker.value);
+          picker.value = '';
+          picker.innerHTML = directPickerOptions();
+        });
+      }
+
+      function appendDirectField(fieldKey) {
+        var meta = availableUnmappedFields.find(function (field) { return field.key === fieldKey; });
+        if (!meta) return;
+        var internalKey = directInternalKey(fieldKey);
+        if (fields.some(function (field) { return field.internalKey === internalKey; })) return;
+        var descriptor = buildDirectDescriptor(meta);
+        fields.push(descriptor);
+        var container = document.getElementById('direct-fields');
+        if (!container) return;
+        container.insertAdjacentHTML('beforeend', renderField(descriptor));
+        var control = form.elements[internalKey];
+        if (control) bindInitialValue(control);
+        updateDirtyState();
+      }
+
       function render(payload) {
         lastPayload = payload;
         fields = payload.fields || [];
+        availableUnmappedFields = payload.availableUnmappedFields || [];
         document.getElementById('deal-title').textContent =
           (payload.dealTitle ? payload.dealTitle + ' · ' : '') + 'Deal #' + payload.dealId;
 
-        if (!fields.length) {
+        if (!fields.length && !availableUnmappedFields.length) {
           form.innerHTML = '<div class="group"><div class="empty">Nejsou uložená žádná mapování polí. Nejdřív je nastav v administraci.</div></div>';
           form.style.display = 'block';
           setMessage('Není co vyplnit.', 'warn');
@@ -393,6 +513,7 @@
         var html = '<div class="summary">' +
           '<span class="pill">' + fields.length + ' polí</span>' +
           '<span class="pill">' + filledCount(fields) + ' vyplněno</span>' +
+          '<span class="pill">' + availableUnmappedFields.length + ' nenalinkovaných k testu</span>' +
           '<span class="pill">hodnoty se ukládají přímo do dealu</span>' +
           '</div>';
 
@@ -404,13 +525,15 @@
             groupFields.map(renderField).join('') +
             '</section>';
         });
+        html += renderDirectPicker();
 
         form.innerHTML = html;
         form.style.display = 'block';
         Array.prototype.forEach.call(form.elements, function (control) {
           if (!control.name) return;
-          control.dataset.initial = JSON.stringify(readControl(control.name));
+          bindInitialValue(control);
         });
+        bindDirectPicker();
         setMessage('', '');
         updateDirtyState();
       }
@@ -478,8 +601,16 @@
         try {
           var identifier = params.get('id') || undefined;
           sdk = new AppExtensionsSDK(identifier ? { identifier: identifier } : undefined);
-          var context = await sdk.initialize({ size: { height: 720 } });
+          var context = await sdk.initialize({ size: MODAL_SIZE });
           sdkReady = true;
+          try {
+            var resizeCommand = (typeof AppExtensionsSDK !== 'undefined' && AppExtensionsSDK.Command && AppExtensionsSDK.Command.RESIZE)
+              ? AppExtensionsSDK.Command.RESIZE
+              : 'resize';
+            await sdk.execute(resizeCommand, MODAL_SIZE);
+          } catch (_) {
+            // Hostitel může šířku modalu řídit konfigurací rozšíření; stránka zůstává funkční.
+          }
           if (context && context.id && !isNaN(parseInt(context.id, 10))) {
             dealId = parseInt(context.id, 10);
           }
