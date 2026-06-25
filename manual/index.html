@@ -257,6 +257,19 @@
             <input type="number" id="f_vzdalenost_km" name="vzdalenost_km" min="0" step="1" placeholder="km na místo">
           </div>
         </div>
+        <div class="frow">
+          <div class="flabel">
+            <label for="f_vysoka_spodni_voda">Vysoká spodní voda</label>
+            <div class="hint">Vysoká voda → základ ČOV betonová deska místo štěrku.</div>
+            <div class="key">vysoka_spodni_voda</div>
+          </div>
+          <div>
+            <select id="f_vysoka_spodni_voda" name="vysoka_spodni_voda">
+              <option value="">— ne / nízká —</option>
+              <option value="ano">Ano — vysoká spodní voda</option>
+            </select>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -534,6 +547,26 @@
             </div>
           </div>
           <div class="hint">Čerpadlo, filtr, plavákový spínač apod.</div>
+        </div>
+
+        <!-- Geiger prosvod dešťové vody -->
+        <div class="compound" id="row_nadrz_geiger" style="display:none">
+          <label>Geiger prosvod dešťové vody</label>
+          <div class="compound-row">
+            <div class="compound-sub">
+              <label>Typ prosvodu</label>
+              <select name="item_nadrz_geiger">
+                <option value="">— bez prosvodu —</option>
+                <option value="GEIGER-CERNY-SPODNI-ODTOK">Geiger černý — spodní odtok (360 Kč/ks)</option>
+                <option value="GEIGER-CERNY-BOCNI-ODTOK">Geiger černý — boční odtok (250 Kč/ks)</option>
+              </select>
+            </div>
+            <div class="compound-sub">
+              <label>Počet (ks)</label>
+              <input type="number" name="qty_nadrz_geiger" min="1" step="1" placeholder="1">
+            </div>
+          </div>
+          <div class="hint">Cena z ceníku; účtuje se jen při výběru typu. Počet = kolik prosvodů.</div>
         </div>
       </div>
     </div>
@@ -946,7 +979,7 @@
 
   window.onNadrzChange = function() {
     var hasNadrz = !!document.getElementById('f_typ_nadrze').value;
-    ['row_pocet_nadrzi','row_zalozeni_nadrze','row_nadrz_prislusenstvi'].forEach(function(id) {
+    ['row_pocet_nadrzi','row_zalozeni_nadrze','row_nadrz_prislusenstvi','row_nadrz_geiger'].forEach(function(id) {
       var el = document.getElementById(id);
       if (el) el.style.display = hasNadrz ? '' : 'none';
     });
@@ -1003,7 +1036,7 @@
     'delka_potrubi','pocet_nadrzi','pocet_dni_realizace','vzdalenost_km',
     'plocha_vsaku_m2','objem_vsaku_m3','sterk_vsak_m3','objem_vykopu_vsak_m3','bagr_hod_vsak',
     'qty_cov_prislusenstvi','price_cov_prislusenstvi',
-    'qty_nadrz_prislusenstvi','price_nadrz_prislusenstvi',
+    'qty_nadrz_prislusenstvi','price_nadrz_prislusenstvi','qty_nadrz_geiger',
     'qty_vsak_tunel','price_vsak_tunel',
     'qty_septik_septik','price_septik_septik',
     'qty_septik_filtr','price_septik_filtr',
