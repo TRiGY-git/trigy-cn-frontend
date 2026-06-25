@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ruční vstupy CN</title>
+  <title>Vstupy CN</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
     body {
@@ -14,696 +14,1147 @@
       background: #f6f3f8;
     }
     header {
-      position: sticky;
-      top: 0;
-      z-index: 10;
+      position: sticky; top: 0; z-index: 10;
       background: #fff;
       border-bottom: 1px solid #e2d8eb;
-      padding: 14px 18px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-    h1 {
-      margin: 0;
-      font-size: 18px;
-      line-height: 1.2;
-      color: #3b244b;
-    }
-    .subtitle {
-      margin-top: 3px;
-      font-size: 12px;
-      color: #6f6478;
-    }
-    main { padding: 16px 18px 88px; }
-    .status {
-      border: 1px solid #ded3e8;
-      border-radius: 8px;
-      background: #fff;
-      padding: 12px 14px;
-      color: #5a4d66;
-      line-height: 1.45;
-    }
-    .status.error {
-      border-color: #efb9b1;
-      background: #fff5f3;
-      color: #9b2f22;
-    }
-    .status.success {
-      border-color: #a9d7b3;
-      background: #f0fff3;
-      color: #256535;
-    }
-    .status.warn {
-      border-color: #f0d487;
-      background: #fff9e8;
-      color: #765600;
-    }
-    .summary {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 14px;
-    }
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      border-radius: 999px;
-      border: 1px solid #ddcde8;
-      background: #fff;
-      color: #5f3c79;
-      padding: 5px 10px;
-      font-size: 12px;
-      font-weight: 600;
-    }
-    .group {
-      background: #fff;
-      border: 1px solid #ded3e8;
-      border-radius: 10px;
-      margin-bottom: 14px;
-      overflow: hidden;
-      box-shadow: 0 1px 2px rgba(44, 28, 57, 0.04);
-    }
-    .group h2 {
-      margin: 0;
-      padding: 12px 14px;
-      font-size: 14px;
-      color: #3b244b;
-      background: #fbf8fd;
-      border-bottom: 1px solid #eee6f3;
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      align-items: center;
-    }
-    .group-count {
-      color: #7d6b88;
-      font-size: 11px;
-      font-weight: 600;
-    }
-    .field-row {
-      display: grid;
-      grid-template-columns: minmax(180px, 260px) 1fr;
-      gap: 12px;
-      padding: 12px 14px;
-      border-bottom: 1px solid #f0e9f4;
-    }
-    .field-row:last-child { border-bottom: 0; }
-    .field-row.changed { background: #fffaf0; }
-    .field-label {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      min-width: 0;
-    }
-    label {
-      font-weight: 700;
-      color: #2e2636;
-      line-height: 1.3;
-    }
-    .required { color: #b64231; }
-    .key {
-      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
-      font-size: 11px;
-      color: #7d6b88;
-      overflow-wrap: anywhere;
-    }
-    .source-badge {
-      display: inline-flex;
-      align-items: center;
-      width: fit-content;
-      border-radius: 999px;
-      padding: 2px 7px;
-      font-size: 11px;
-      font-weight: 700;
-      background: #f0e8f6;
-      color: #5f3c79;
-    }
-    .source-badge.implicit {
-      background: #eaf6ee;
-      color: #256535;
-    }
-    .source-badge.direct {
-      background: #fff3d9;
-      color: #765600;
-    }
-    .helper {
-      margin-top: 5px;
-      font-size: 12px;
-      color: #6f6478;
-      line-height: 1.4;
-    }
-    input, select, textarea {
-      width: 100%;
-      border: 1px solid #cfc0dc;
-      border-radius: 7px;
-      padding: 8px 9px;
-      font: inherit;
-      color: #26212d;
-      background: #fff;
-    }
-    select[multiple] { min-height: 110px; }
-    textarea { min-height: 74px; resize: vertical; }
-    input:focus, select:focus, textarea:focus {
-      outline: none;
-      border-color: #79489c;
-      box-shadow: 0 0 0 3px rgba(121, 72, 156, 0.14);
-    }
-    .controls {
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      z-index: 20;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
       padding: 12px 18px;
-      background: rgba(255, 255, 255, 0.96);
-      border-top: 1px solid #e2d8eb;
-      box-shadow: 0 -8px 20px rgba(44, 28, 57, 0.08);
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
     }
-    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    h1 { margin: 0; font-size: 17px; color: #3b244b; }
+    .subtitle { margin-top: 2px; font-size: 12px; color: #6f6478; }
+    main { padding: 14px 18px 100px; display: flex; flex-direction: column; gap: 12px; }
+
+    /* Status messages */
+    .msg {
+      border-radius: 8px; padding: 11px 14px;
+      border: 1px solid #ded3e8; background: #fff; color: #5a4d66;
+      font-size: 13px; line-height: 1.45;
+    }
+    .msg.error  { border-color: #efb9b1; background: #fff5f3; color: #9b2f22; }
+    .msg.success { border-color: #a9d7b3; background: #f0fff3; color: #256535; }
+    .msg.warn   { border-color: #f0d487; background: #fff9e8; color: #765600; }
+
+    /* Groups */
+    .group {
+      background: #fff; border: 1px solid #ded3e8; border-radius: 10px;
+      overflow: hidden; box-shadow: 0 1px 2px rgba(44,28,57,.04);
+    }
+    .group-head {
+      padding: 11px 14px;
+      background: #fbf8fd; border-bottom: 1px solid #eee6f3;
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      cursor: pointer; user-select: none;
+    }
+    .group-head h2 {
+      margin: 0; font-size: 13px; color: #3b244b;
+      display: flex; align-items: center; gap: 7px;
+    }
+    .group-head h2 .icon { font-size: 15px; }
+    .group-badge {
+      font-size: 11px; font-weight: 600; color: #7d6b88;
+      background: #f0e8f6; border-radius: 999px; padding: 2px 8px;
+    }
+    .group-body { display: none; }
+    .group-body.open { display: block; }
+
+    /* Field rows */
+    .frow {
+      display: grid; grid-template-columns: minmax(160px,230px) 1fr;
+      gap: 10px; padding: 11px 14px; border-bottom: 1px solid #f0e9f4;
+      align-items: start;
+    }
+    .frow:last-child { border-bottom: none; }
+    .frow.hidden { display: none; }
+    .flabel { display: flex; flex-direction: column; gap: 3px; }
+    label { font-weight: 700; color: #2e2636; line-height: 1.3; font-size: 13px; }
+    .req { color: #b64231; }
+    .hint { font-size: 11px; color: #6f6478; line-height: 1.4; margin-top: 3px; }
+    .key { font-family: ui-monospace, monospace; font-size: 10px; color: #9d88aa; }
+
+    /* Compound rows: item + qty + price in one line */
+    .compound {
+      padding: 11px 14px; border-bottom: 1px solid #f0e9f4;
+    }
+    .compound:last-child { border-bottom: none; }
+    .compound > label { font-weight: 700; color: #2e2636; font-size: 13px; display: block; margin-bottom: 7px; }
+    .compound-row {
+      display: grid; gap: 8px;
+      grid-template-columns: 1fr 90px 130px;
+    }
+    .compound-row.no-price { grid-template-columns: 1fr 100px; }
+    .compound-row.with-confirm { grid-template-columns: 1fr 90px 130px 100px; }
+    .compound-sub label { font-size: 11px; color: #7d6b88; font-weight: 600; display: block; margin-bottom: 3px; }
+    .compound .hint { margin-top: 5px; }
+
+    /* Controls */
+    input, select, textarea {
+      width: 100%; border: 1px solid #cfc0dc; border-radius: 7px;
+      padding: 7px 9px; font: inherit; color: #26212d; background: #fff;
+    }
+    input[type="number"] { -moz-appearance: textfield; }
+    input:focus, select:focus { outline: none; border-color: #79489c; box-shadow: 0 0 0 3px rgba(121,72,156,.13); }
+    input.req-missing, select.req-missing { border-color: #b64231; }
+
+    /* Bottom bar */
+    .controls {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 11px 18px;
+      background: rgba(255,255,255,.96); border-top: 1px solid #e2d8eb;
+      box-shadow: 0 -6px 18px rgba(44,28,57,.08);
+    }
+    .status-text { font-size: 12px; color: #7d6b88; max-width: 280px; }
+    .actions { display: flex; gap: 8px; }
     button {
-      border: 1px solid transparent;
-      border-radius: 7px;
-      padding: 9px 13px;
-      font: inherit;
-      font-weight: 700;
-      cursor: pointer;
+      border: 1px solid transparent; border-radius: 7px; padding: 8px 14px;
+      font: inherit; font-weight: 700; cursor: pointer; font-size: 13px;
     }
-    button:disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
-    }
+    button:disabled { opacity: .5; cursor: not-allowed; }
     .btn-primary { background: #79489c; color: #fff; border-color: #79489c; }
     .btn-primary:hover:not(:disabled) { background: #62377f; }
-    .btn-secondary { background: #fff; color: #79489c; border-color: #79489c; }
+    .btn-secondary { background: #fff; color: #79489c; border-color: #c8a8e0; }
     .btn-secondary:hover:not(:disabled) { background: #f3edf8; }
-    .muted {
-      color: #7d6b88;
-      font-size: 12px;
+    .btn-danger { background: #fff; color: #9b2f22; border-color: #efb9b1; }
+    .btn-danger:hover:not(:disabled) { background: #fff5f3; }
+
+    /* Result card */
+    .result-card {
+      display: none; padding: 12px 14px;
+      border-top: 1px solid #eee6f3;
+      background: #f8f4fc;
     }
-    .empty {
-      padding: 18px;
-      text-align: center;
-      color: #6f6478;
-    }
-    .direct-picker {
-      padding: 12px 14px;
-      border-bottom: 1px solid #f0e9f4;
-      display: grid;
-      gap: 8px;
-    }
-    .direct-picker label {
-      font-size: 13px;
-    }
-    @media (max-width: 680px) {
-      .field-row { grid-template-columns: 1fr; }
-      header, main, .controls { padding-left: 12px; padding-right: 12px; }
-      .controls { align-items: stretch; flex-direction: column; }
-      .actions { width: 100%; }
+    .result-card.show { display: block; }
+    .result-num { font-size: 16px; font-weight: 800; color: #3b244b; }
+    .result-total { font-size: 22px; font-weight: 800; color: #256535; margin-top: 2px; }
+    .result-link { display: inline-block; margin-top: 8px; color: #79489c; font-weight: 700; font-size: 13px; text-decoration: none; }
+    .result-link:hover { text-decoration: underline; }
+
+    @media (max-width:640px) {
+      .frow { grid-template-columns: 1fr; }
+      .compound-row, .compound-row.with-confirm { grid-template-columns: 1fr 1fr; }
+      .controls { flex-direction: column; align-items: stretch; }
       .actions button { flex: 1; }
     }
   </style>
 </head>
 <body>
-  <header>
-    <div>
-      <h1>Ruční vstupy pro cenovou nabídku</h1>
-      <div class="subtitle" id="deal-title">Načítám deal…</div>
-    </div>
-    <button class="btn-secondary" id="btn-reload" type="button">Načíst znovu</button>
-  </header>
-
-  <main>
-    <div id="message" class="status">Inicializuji Pipedrive modal a načítám namapovaná pole.</div>
-    <form id="manual-form" style="display:none"></form>
-  </main>
-
-  <div class="controls">
-    <div class="muted" id="dirty-info">Beze změn.</div>
-    <div class="actions">
-      <button class="btn-secondary" id="btn-reset" type="button" disabled>Vrátit změny</button>
-      <button class="btn-primary" id="btn-save" type="button" disabled>Uložit</button>
-      <button class="btn-primary" id="btn-save-close" type="button" disabled>Uložit a zavřít</button>
-    </div>
+<header>
+  <div>
+    <h1>Vstupy pro CN</h1>
+    <div class="subtitle" id="deal-title">Načítám deal…</div>
   </div>
+  <div style="display:flex;gap:8px">
+    <button class="btn-danger" id="btn-clear" type="button" title="Vymazat vše">Vymazat</button>
+    <button class="btn-secondary" id="btn-reload" type="button" title="Znovu načíst deal">↺ Reload</button>
+  </div>
+</header>
 
-  <script src="https://cdn.jsdelivr.net/npm/@pipedrive/app-extensions-sdk@0/dist/index.umd.js"></script>
-  <script>
-    (function () {
-      'use strict';
+<main>
+  <div id="msg" class="msg" style="display:none"></div>
 
-      var API_BASE = 'https://dvcxqjlbyajqnkylmdya.supabase.co/functions/v1/api';
-      var params = new URLSearchParams(location.search);
-      var sdk = null;
-      var sdkReady = false;
-      var dealId = parseDealId();
-      var fields = [];
-      var availableUnmappedFields = [];
-      var lastPayload = null;
-      var DIRECT_FIELD_PREFIX = '__pdfield__';
-      var MODAL_SIZE = { width: 900, height: 760 };
+  <form id="form" novalidate>
 
-      var form = document.getElementById('manual-form');
-      var message = document.getElementById('message');
-      var dirtyInfo = document.getElementById('dirty-info');
-      var btnSave = document.getElementById('btn-save');
-      var btnSaveClose = document.getElementById('btn-save-close');
-      var btnReset = document.getElementById('btn-reset');
-      var btnReload = document.getElementById('btn-reload');
+    <!-- ══════════════════════════════════════
+         1. OBCHODNÍ PODMÍNKY (required)
+    ══════════════════════════════════════ -->
+    <div class="group">
+      <div class="group-head" onclick="toggleGroup(this)">
+        <h2><span class="icon">💰</span> Obchodní podmínky</h2>
+        <span class="group-badge">povinné</span>
+      </div>
+      <div class="group-body open">
+        <div class="frow">
+          <div class="flabel">
+            <label for="f_vat_rate">Sazba DPH <span class="req">*</span></label>
+            <div class="hint">Povinné pro vygenerování CN.</div>
+            <div class="key">vat_rate</div>
+          </div>
+          <div>
+            <select id="f_vat_rate" name="vat_rate">
+              <option value="">— nevyplněno —</option>
+              <option value="0">0 %</option>
+              <option value="12" selected>12 %</option>
+              <option value="21">21 %</option>
+            </select>
+          </div>
+        </div>
+        <div class="frow">
+          <div class="flabel">
+            <label for="f_marze_pct">Přirážka / marže (%)</label>
+            <div class="hint">Výchozí je 30 %. Zadej jen při přepsání.</div>
+            <div class="key">marze_pct</div>
+          </div>
+          <div>
+            <input type="number" id="f_marze_pct" name="marze_pct" min="0" max="200" step="1" placeholder="výchozí 30">
+          </div>
+        </div>
+        <div class="frow">
+          <div class="flabel">
+            <label for="f_sleva_pct">Sleva (%)</label>
+            <div class="key">sleva_pct</div>
+          </div>
+          <div>
+            <input type="number" id="f_sleva_pct" name="sleva_pct" min="0" max="100" step="0.1" placeholder="0">
+          </div>
+        </div>
+        <div class="frow">
+          <div class="flabel">
+            <label for="f_sleva_kc">Sleva (Kč)</label>
+            <div class="key">sleva_kc</div>
+          </div>
+          <div>
+            <input type="number" id="f_sleva_kc" name="sleva_kc" min="0" step="100" placeholder="0">
+          </div>
+        </div>
+        <div class="frow">
+          <div class="flabel">
+            <label for="f_sleva_duvod">Důvod slevy</label>
+            <div class="hint">Povinné, je-li zadána sleva.</div>
+            <div class="key">sleva_duvod</div>
+          </div>
+          <div>
+            <input type="text" id="f_sleva_duvod" name="sleva_duvod" placeholder="Věrnostní sleva, sezónní akce…">
+          </div>
+        </div>
+        <div class="frow">
+          <div class="flabel">
+            <label for="f_dotace_kc">Dotace (Kč)</label>
+            <div class="hint">Pouze informační — nesnižuje cenu.</div>
+            <div class="key">dotace_kc</div>
+          </div>
+          <div>
+            <input type="number" id="f_dotace_kc" name="dotace_kc" min="0" step="500" placeholder="0">
+          </div>
+        </div>
+      </div>
+    </div>
 
-      function parseDealId() {
-        var direct = params.get('dealId');
-        if (direct && !isNaN(parseInt(direct, 10))) return parseInt(direct, 10);
-        var selected = params.get('selectedIds');
-        if (selected) {
-          var first = selected.split(',')[0];
-          if (!isNaN(parseInt(first, 10))) return parseInt(first, 10);
-        }
-        return 0;
+    <!-- ══════════════════════════════════════
+         2. ČOV
+    ══════════════════════════════════════ -->
+    <div class="group">
+      <div class="group-head" onclick="toggleGroup(this)">
+        <h2><span class="icon">🏭</span> ČOV — Čistička odpadních vod</h2>
+      </div>
+      <div class="group-body open">
+        <div class="frow">
+          <div class="flabel">
+            <label for="f_typ_cov">Typ ČOV</label>
+            <div class="hint">Výběr z aktivního ceníku.</div>
+            <div class="key">typ_cov</div>
+          </div>
+          <div>
+            <select id="f_typ_cov" name="typ_cov" onchange="onCovChange()">
+              <option value="">— bez ČOV —</option>
+              <optgroup label="TOPAS (standard)">
+                <option value="COV-TOPAS-5">TOPAS 5</option>
+                <option value="COV-TOPAS-8">TOPAS 8</option>
+                <option value="COV-TOPAS-10">TOPAS 10</option>
+                <option value="COV-TOPAS-15">TOPAS 15</option>
+                <option value="COV-TOPAS-20">TOPAS 20</option>
+                <option value="COV-TOPAS-30">TOPAS 30</option>
+              </optgroup>
+              <optgroup label="TOPAS S (suchý základ)">
+                <option value="COV-TOPAS-S-5">TOPAS S 5</option>
+                <option value="COV-TOPAS-S-8">TOPAS S 8</option>
+              </optgroup>
+              <optgroup label="TOPAS Long">
+                <option value="COV-TOPAS-5-LONG">TOPAS 5 Long</option>
+                <option value="COV-TOPAS-8-LONG">TOPAS 8 Long</option>
+              </optgroup>
+              <optgroup label="TOPAS DUO Prim">
+                <option value="COV-TOPAS-5-DUO-PRIM">TOPAS 5 DUO Prim</option>
+                <option value="COV-TOPAS-8-DUO-PRIM">TOPAS 8 DUO Prim</option>
+              </optgroup>
+              <optgroup label="TOPAS DUO Reuse">
+                <option value="COV-TOPAS-5-DUO-REUSE">TOPAS 5 DUO Reuse</option>
+                <option value="COV-TOPAS-8-DUO-REUSE">TOPAS 8 DUO Reuse</option>
+              </optgroup>
+              <optgroup label="TOPAS R Basic">
+                <option value="COV-TOPAS-R-5-BASIC">TOPAS R 5 BASIC</option>
+                <option value="COV-TOPAS-R-8-BASIC">TOPAS R 8 BASIC</option>
+              </optgroup>
+              <optgroup label="AT">
+                <option value="COV-AT6">AT6</option>
+                <option value="COV-AT8">AT8</option>
+                <option value="COV-AT10">AT10</option>
+                <option value="COV-AT12">AT12</option>
+              </optgroup>
+              <optgroup label="AT PLUS-GSM">
+                <option value="COV-AT6-PLUS-GSM">AT6 PLUS-GSM</option>
+                <option value="COV-AT8-PLUS-GSM">AT8 PLUS-GSM</option>
+                <option value="COV-AT10-PLUS-GSM">AT10 PLUS-GSM</option>
+                <option value="COV-AT12-PLUS-GSM">AT12 PLUS-GSM</option>
+              </optgroup>
+              <optgroup label="AT PLUS-GSM CONTROL">
+                <option value="COV-AT6-PLUS-GSM-CONTROL">AT6 PLUS-GSM CONTROL</option>
+                <option value="COV-AT8-PLUS-GSM-CONTROL">AT8 PLUS-GSM CONTROL</option>
+                <option value="COV-AT10-PLUS-GSM-CONTROL">AT10 PLUS-GSM CONTROL</option>
+                <option value="COV-AT12-PLUS-GSM-CONTROL">AT12 PLUS-GSM CONTROL</option>
+              </optgroup>
+              <optgroup label="MONOcomp">
+                <option value="COV-MONOCOMP-4">MONOcomp 4</option>
+                <option value="COV-MONOCOMP-8">MONOcomp 8</option>
+                <option value="COV-MONOCOMP-12">MONOcomp 12</option>
+              </optgroup>
+            </select>
+          </div>
+        </div>
+
+        <div class="frow" id="row_zalozeni_cov" style="display:none">
+          <div class="flabel">
+            <label for="f_zalozeni_cov">Základ ČOV</label>
+            <div class="hint">Technické potvrzení základu.</div>
+            <div class="key">zalozeni_cov</div>
+          </div>
+          <div>
+            <select id="f_zalozeni_cov" name="zalozeni_cov">
+              <option value="">— nevyplněno —</option>
+              <option value="sterk">Štěrkový zásyp</option>
+              <option value="beton">Betonová deska</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="frow" id="row_betonaz" style="display:none">
+          <div class="flabel">
+            <label for="f_betonaz">Obetonování</label>
+            <div class="key">betonaz</div>
+          </div>
+          <div>
+            <select id="f_betonaz" name="betonaz">
+              <option value="">— ne —</option>
+              <option value="obetonovani">Ano — obetonování</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="frow" id="row_okruh_wc" style="display:none">
+          <div class="flabel">
+            <label for="f_okruh_wc">Okruh WC</label>
+            <div class="hint">Přidá potrubní okruh pro WC.</div>
+            <div class="key">okruh_wc</div>
+          </div>
+          <div>
+            <select id="f_okruh_wc" name="okruh_wc">
+              <option value="">— ne —</option>
+              <option value="true">Ano</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Příslušenství ČOV -->
+        <div class="compound" id="row_cov_prislusenstvi" style="display:none">
+          <label>Příslušenství ČOV</label>
+          <div class="compound-row with-confirm">
+            <div class="compound-sub">
+              <label>Typ položky</label>
+              <select name="item_cov_prislusenstvi" onchange="onCompoundItem(this,'cov_prislusenstvi')">
+                <option value="">— bez příslušenství —</option>
+                <option value="COV-PRISLUSENSTVI-MANUAL">Příslušenství ČOV – dle návrhu</option>
+              </select>
+            </div>
+            <div class="compound-sub">
+              <label>Množství</label>
+              <input type="number" name="qty_cov_prislusenstvi" min="1" step="1" placeholder="ks">
+            </div>
+            <div class="compound-sub">
+              <label>Cena / ks (bez DPH)</label>
+              <input type="number" name="price_cov_prislusenstvi" min="0" step="100" placeholder="Kč">
+            </div>
+            <div class="compound-sub">
+              <label>Potvrzení</label>
+              <select name="confirm_cov_prislusenstvi">
+                <option value="">—</option>
+                <option value="ano">Ano</option>
+              </select>
+            </div>
+          </div>
+          <div class="hint">Pumpa, UV lampa, manostat, záložní vzduchování apod.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         3. NÁDRŽ
+    ══════════════════════════════════════ -->
+    <div class="group">
+      <div class="group-head" onclick="toggleGroup(this)">
+        <h2><span class="icon">🛢️</span> Nádrž na dešťovou vodu</h2>
+      </div>
+      <div class="group-body">
+        <div class="frow">
+          <div class="flabel">
+            <label for="f_typ_nadrze">Typ nádrže</label>
+            <div class="key">typ_nadrze</div>
+          </div>
+          <div>
+            <select id="f_typ_nadrze" name="typ_nadrze" onchange="onNadrzChange()">
+              <option value="">— bez nádrže —</option>
+              <optgroup label="Atlantis">
+                <option value="NADRZ-ATLANTIS-2200">Atlantis 2 200 L</option>
+                <option value="NADRZ-ATLANTIS-4000">Atlantis 4 000 L</option>
+                <option value="NADRZ-ATLANTIS-2200-SADA">Atlantis 2 200 L – Sada zalévání</option>
+                <option value="NADRZ-ATLANTIS-4000-SADA">Atlantis 4 000 L – Sada zalévání</option>
+                <option value="NADRZ-ATLANTIS-5300-SADA">Atlantis 5 300 L – Sada zalévání</option>
+                <option value="NADRZ-ATLANTIS-7000-SADA">Atlantis 7 000 L – Sada zalévání</option>
+              </optgroup>
+              <optgroup label="Columbus">
+                <option value="NADRZ-COLUMBUS-3700-BEZ-NASTAVCE">Columbus 3 700 L – bez nástavce</option>
+                <option value="NADRZ-COLUMBUS-3700-S-NASTAVCEM">Columbus 3 700 L – s nástavcem</option>
+                <option value="NADRZ-COLUMBUS-4500-BEZ-NASTAVCE">Columbus 4 500 L – bez nástavce</option>
+                <option value="NADRZ-COLUMBUS-4500-S-NASTAVCEM">Columbus 4 500 L – s nástavcem</option>
+                <option value="NADRZ-COLUMBUS-6500-BEZ-NASTAVCE">Columbus 6 500 L – bez nástavce</option>
+                <option value="NADRZ-COLUMBUS-6500-S-NASTAVCEM">Columbus 6 500 L – s nástavcem</option>
+                <option value="NADRZ-COLUMBUS-3700-SADA">Columbus 3 700 L – Sada zalévání</option>
+                <option value="NADRZ-COLUMBUS-4500-SADA">Columbus 4 500 L – Sada zalévání</option>
+                <option value="NADRZ-COLUMBUS-6500-SADA">Columbus 6 500 L – Sada zalévání</option>
+              </optgroup>
+              <optgroup label="Clearo">
+                <option value="NADRZ-CLEARO-1000">Clearo 1 000 L</option>
+                <option value="NADRZ-CLEARO-1500">Clearo 1 500 L</option>
+                <option value="NADRZ-CLEARO-2000">Clearo 2 000 L</option>
+                <option value="NADRZ-CLEARO-1000-SADA">Clearo 1 000 L – Sada zalévání</option>
+                <option value="NADRZ-CLEARO-1500-SADA">Clearo 1 500 L – Sada zalévání</option>
+                <option value="NADRZ-CLEARO-2000-SADA">Clearo 2 000 L – Sada zalévání</option>
+              </optgroup>
+              <optgroup label="Cristall">
+                <option value="NADRZ-CRISTALL-1600-BEZ-NASTAVCE">Cristall 1 600 L – bez nástavce</option>
+                <option value="NADRZ-CRISTALL-1600-S-NASTAVCEM">Cristall 1 600 L – s nástavcem</option>
+              </optgroup>
+              <optgroup label="Aqua / Ecoline">
+                <option value="NADRZ-AQUA-2000">Aqua 2 000 L</option>
+                <option value="NADRZ-AQUA-4000">Aqua 4 000 L</option>
+                <option value="NADRZ-ECOLINE-3300">Ecoline 3 300 L</option>
+                <option value="NADRZ-ECOLINE-3300-SADA">Ecoline 3 300 L – Sada zalévání</option>
+              </optgroup>
+              <optgroup label="Globoline / Ozeanis">
+                <option value="NADRZ-GLOBOLINE-8300-SADA">Globoline 8 300 L – Sada zalévání</option>
+                <option value="NADRZ-OZEANIS-6000-SADA">Ozeanis 6 000 L – Sada zalévání</option>
+              </optgroup>
+            </select>
+          </div>
+        </div>
+
+        <div class="frow" id="row_pocet_nadrzi" style="display:none">
+          <div class="flabel">
+            <label for="f_pocet_nadrzi">Počet nádrží</label>
+            <div class="hint">Při 2+ vyžaduje potvrzení propojení.</div>
+            <div class="key">pocet_nadrzi</div>
+          </div>
+          <div>
+            <input type="number" id="f_pocet_nadrzi" name="pocet_nadrzi" min="1" step="1" placeholder="1" onchange="onPocetNadrzChange()">
+          </div>
+        </div>
+
+        <div class="frow" id="row_zalozeni_nadrze" style="display:none">
+          <div class="flabel">
+            <label for="f_zalozeni_nadrze">Základ nádrže</label>
+            <div class="key">zalozeni_nadrze</div>
+          </div>
+          <div>
+            <select id="f_zalozeni_nadrze" name="zalozeni_nadrze">
+              <option value="">— nevyplněno —</option>
+              <option value="sterk">Štěrkový zásyp</option>
+              <option value="beton">Betonová deska</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="frow" id="row_potvrzeni_propojeni" style="display:none">
+          <div class="flabel">
+            <label for="f_potvrzeni_propojeni_nadrzi">Potvrzení propojení nádrží</label>
+            <div class="hint">Povinné při více nádržích.</div>
+            <div class="key">potvrzeni_propojeni_nadrzi</div>
+          </div>
+          <div>
+            <select id="f_potvrzeni_propojeni_nadrzi" name="potvrzeni_propojeni_nadrzi">
+              <option value="">— nevyplněno —</option>
+              <option value="true">Ano — propojení potvrzeno</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Příslušenství nádrže -->
+        <div class="compound" id="row_nadrz_prislusenstvi" style="display:none">
+          <label>Příslušenství nádrže</label>
+          <div class="compound-row with-confirm">
+            <div class="compound-sub">
+              <label>Typ položky</label>
+              <select name="item_nadrz_prislusenstvi" onchange="onCompoundItem(this,'nadrz_prislusenstvi')">
+                <option value="">— bez příslušenství —</option>
+                <option value="NADRZ-PRISLUSENSTVI-MANUAL">Příslušenství nádrže – dle návrhu</option>
+              </select>
+            </div>
+            <div class="compound-sub">
+              <label>Množství</label>
+              <input type="number" name="qty_nadrz_prislusenstvi" min="1" step="1" placeholder="ks">
+            </div>
+            <div class="compound-sub">
+              <label>Cena / ks (bez DPH)</label>
+              <input type="number" name="price_nadrz_prislusenstvi" min="0" step="100" placeholder="Kč">
+            </div>
+            <div class="compound-sub">
+              <label>Potvrzení</label>
+              <select name="confirm_nadrz_prislusenstvi">
+                <option value="">—</option>
+                <option value="ano">Ano</option>
+              </select>
+            </div>
+          </div>
+          <div class="hint">Čerpadlo, filtr, plavákový spínač apod.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         4. SVODY A ROZVODY
+    ══════════════════════════════════════ -->
+    <div class="group">
+      <div class="group-head" onclick="toggleGroup(this)">
+        <h2><span class="icon">📐</span> Svody a Rozvody KG</h2>
+      </div>
+      <div class="group-body">
+        <div class="frow">
+          <div class="flabel">
+            <label for="f_delka_potrubi">Délka potrubí (m)</label>
+            <div class="hint">Celková délka svodů KG. Engine automaticky dopočítá mix DN110/125/160, tvarovky, bagr a štěrk.</div>
+            <div class="key">delka_potrubi</div>
+          </div>
+          <div>
+            <input type="number" id="f_delka_potrubi" name="delka_potrubi" min="0" step="1" placeholder="0">
+          </div>
+        </div>
+        <div class="frow">
+          <div class="flabel">
+            <label for="f_rozvody">Vnitřní rozvody</label>
+            <div class="hint">Přidá rozvody uvnitř objektu.</div>
+            <div class="key">rozvody</div>
+          </div>
+          <div>
+            <select id="f_rozvody" name="rozvody">
+              <option value="">— ne —</option>
+              <option value="true">Ano</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         5. VSAKOVACÍ SYSTÉM
+    ══════════════════════════════════════ -->
+    <div class="group">
+      <div class="group-head" onclick="toggleGroup(this)">
+        <h2><span class="icon">💧</span> Vsakovací systém</h2>
+      </div>
+      <div class="group-body">
+
+        <!-- Hlavní prvek -->
+        <div class="compound">
+          <label>Hlavní prvek</label>
+          <div class="compound-row">
+            <div class="compound-sub">
+              <label>Typ <span class="key" style="display:inline">item_vsak_tunel</span></label>
+              <select name="item_vsak_tunel" onchange="onVsakItemChange()">
+                <option value="">— bez vsaku —</option>
+                <option value="VSAK-TUNEL-MANUAL">Vsakovací tunely PP</option>
+                <option value="VSAK-BLOK-MANUAL">Vsakovací bloky (EcoBloc)</option>
+              </select>
+            </div>
+            <div class="compound-sub">
+              <label>Počet kusů <span class="key" style="display:inline">qty_vsak_tunel</span></label>
+              <input type="number" name="qty_vsak_tunel" min="1" step="1" placeholder="ks">
+            </div>
+            <div class="compound-sub">
+              <label>Cena / ks bez DPH <span class="key" style="display:inline">price_vsak_tunel</span></label>
+              <input type="number" name="price_vsak_tunel" min="0" step="100" placeholder="Kč">
+            </div>
+          </div>
+          <div class="hint">Ruční cena — katalogová cena je 0. Počet kusů je povinný.</div>
+        </div>
+
+        <!-- Vsak rozměry -->
+        <div id="vsak_rozmery" style="display:none">
+          <div class="frow">
+            <div class="flabel">
+              <label for="f_plocha_vsaku_m2">Plocha vsaku (m²)</label>
+              <div class="hint">Geotextilie = plocha × ²⁄₃.</div>
+              <div class="key">plocha_vsaku_m2</div>
+            </div>
+            <div>
+              <input type="number" id="f_plocha_vsaku_m2" name="plocha_vsaku_m2" min="0" step="0.5" placeholder="m²">
+            </div>
+          </div>
+          <div class="frow">
+            <div class="flabel">
+              <label for="f_sterk_vsak_m3">Štěrk do vsaku (m³)</label>
+              <div class="hint">Povinné. Dovoz = ceil(m³ × 1,8 / 7) jízd.</div>
+              <div class="key">sterk_vsak_m3</div>
+            </div>
+            <div>
+              <input type="number" id="f_sterk_vsak_m3" name="sterk_vsak_m3" min="0" step="0.5" placeholder="m³">
+            </div>
+          </div>
+          <div class="frow">
+            <div class="flabel">
+              <label for="f_objem_vykopu_vsak_m3">Objem výkopu vsaku (m³)</label>
+              <div class="hint">Bagr = objem / 4 h. Přepíše pole níže.</div>
+              <div class="key">objem_vykopu_vsak_m3</div>
+            </div>
+            <div>
+              <input type="number" id="f_objem_vykopu_vsak_m3" name="objem_vykopu_vsak_m3" min="0" step="0.5" placeholder="m³">
+            </div>
+          </div>
+          <div class="frow">
+            <div class="flabel">
+              <label for="f_bagr_hod_vsak">Bagr — ruční počet hodin</label>
+              <div class="hint">Přepisuje výpočet z objemu výkopu.</div>
+              <div class="key">bagr_hod_vsak</div>
+            </div>
+            <div>
+              <input type="number" id="f_bagr_hod_vsak" name="bagr_hod_vsak" min="0" step="0.5" placeholder="hod">
+            </div>
+          </div>
+          <div class="frow">
+            <div class="flabel">
+              <label for="f_kontrolni_zaver_vsak">Kontrolní závěr DN200</label>
+              <div class="key">kontrolni_zaver_vsak</div>
+            </div>
+            <div>
+              <select id="f_kontrolni_zaver_vsak" name="kontrolni_zaver_vsak">
+                <option value="">— ne —</option>
+                <option value="true">Ano</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         6. SEPTIK
+    ══════════════════════════════════════ -->
+    <div class="group">
+      <div class="group-head" onclick="toggleGroup(this)">
+        <h2><span class="icon">🪣</span> Septik</h2>
+      </div>
+      <div class="group-body">
+        <div class="compound">
+          <label>Septik</label>
+          <div class="compound-row">
+            <div class="compound-sub">
+              <label>Typ</label>
+              <select name="item_septik_septik">
+                <option value="">— bez septiku —</option>
+                <option value="SEPTIK-MANUAL">Septik – dle výrobku</option>
+              </select>
+            </div>
+            <div class="compound-sub">
+              <label>Množství <span class="key" style="display:inline">qty_septik_septik</span></label>
+              <input type="number" name="qty_septik_septik" min="1" step="1" placeholder="ks">
+            </div>
+            <div class="compound-sub">
+              <label>Cena bez DPH <span class="key" style="display:inline">price_septik_septik</span></label>
+              <input type="number" name="price_septik_septik" min="0" step="100" placeholder="Kč">
+            </div>
+          </div>
+        </div>
+        <div class="compound">
+          <label>Pískový filtr</label>
+          <div class="compound-row">
+            <div class="compound-sub">
+              <label>Typ</label>
+              <select name="item_septik_filtr">
+                <option value="">— bez filtru —</option>
+                <option value="SEPTIK-PISKOVY-FILTR-MANUAL">Pískový filtr – dle projektu</option>
+              </select>
+            </div>
+            <div class="compound-sub">
+              <label>Množství <span class="key" style="display:inline">qty_septik_filtr</span></label>
+              <input type="number" name="qty_septik_filtr" min="1" step="1" placeholder="kpl">
+            </div>
+            <div class="compound-sub">
+              <label>Cena bez DPH <span class="key" style="display:inline">price_septik_filtr</span></label>
+              <input type="number" name="price_septik_filtr" min="0" step="100" placeholder="Kč">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         7. ZEMINA
+    ══════════════════════════════════════ -->
+    <div class="group">
+      <div class="group-head" onclick="toggleGroup(this)">
+        <h2><span class="icon">🚜</span> Zemina</h2>
+      </div>
+      <div class="group-body">
+        <div class="compound">
+          <label>Odvoz zeminy</label>
+          <div class="compound-row no-price">
+            <div class="compound-sub">
+              <label>Zahrnout</label>
+              <select name="item_zemina_odvoz">
+                <option value="">— ne —</option>
+                <option value="ZEMINA-ODVOZ-MANUAL">Odvoz přebytečné zeminy</option>
+              </select>
+            </div>
+            <div class="compound-sub">
+              <label>Množství (m³) <span class="key" style="display:inline">qty_zemina_odvoz</span></label>
+              <input type="number" name="qty_zemina_odvoz" min="0" step="1" placeholder="m³">
+            </div>
+          </div>
+        </div>
+        <div class="compound">
+          <label>Likvidace zeminy / skládka</label>
+          <div class="compound-row no-price">
+            <div class="compound-sub">
+              <label>Zahrnout</label>
+              <select name="item_zemina_likvidace">
+                <option value="">— ne —</option>
+                <option value="ZEMINA-LIKVIDACE-MANUAL">Likvidace zeminy – skládka</option>
+              </select>
+            </div>
+            <div class="compound-sub">
+              <label>Množství (t) <span class="key" style="display:inline">qty_zemina_likvidace</span></label>
+              <input type="number" name="qty_zemina_likvidace" min="0" step="1" placeholder="t">
+            </div>
+          </div>
+        </div>
+        <div class="compound">
+          <label>Hutnění zásypu</label>
+          <div class="compound-row no-price">
+            <div class="compound-sub">
+              <label>Zahrnout</label>
+              <select name="item_zemina_hutneni">
+                <option value="">— ne —</option>
+                <option value="ZEMINA-HUTNENI-MANUAL">Hutnění zásypu</option>
+              </select>
+            </div>
+            <div class="compound-sub">
+              <label>Počet dní <span class="key" style="display:inline">qty_zemina_hutneni</span></label>
+              <input type="number" name="qty_zemina_hutneni" min="0" step="1" placeholder="den">
+            </div>
+          </div>
+        </div>
+        <div class="compound">
+          <label>Průraz / prostup do objektu</label>
+          <div class="compound-row no-price">
+            <div class="compound-sub">
+              <label>Zahrnout</label>
+              <select name="item_zemina_pruraz">
+                <option value="">— ne —</option>
+                <option value="ZEMINA-PRURAZ-MANUAL">Prostup / průraz do objektu</option>
+              </select>
+            </div>
+            <div class="compound-sub">
+              <label>Počet ks <span class="key" style="display:inline">qty_zemina_pruraz</span></label>
+              <input type="number" name="qty_zemina_pruraz" min="0" step="1" placeholder="ks">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         8. OBCHODNÍ POLOŽKY
+    ══════════════════════════════════════ -->
+    <div class="group">
+      <div class="group-head" onclick="toggleGroup(this)">
+        <h2><span class="icon">📋</span> Obchodní položky</h2>
+      </div>
+      <div class="group-body">
+        <div class="frow">
+          <div class="flabel">
+            <label for="f_obchod_prohlidka">Technická prohlídka</label>
+            <div class="hint">Fixní cena 5 000 Kč z katalogu.</div>
+            <div class="key">item_obchod_prohlidka</div>
+          </div>
+          <div>
+            <select id="f_obchod_prohlidka" name="item_obchod_prohlidka">
+              <option value="">— ne —</option>
+              <option value="OBCHOD-TECHNICKA-PROHLIDKA">Ano — technická prohlídka</option>
+            </select>
+          </div>
+        </div>
+        <div class="compound">
+          <label>Hydrogeologický posudek (HGI)</label>
+          <div class="compound-row no-price">
+            <div class="compound-sub">
+              <label>Zahrnout</label>
+              <select name="item_obchod_hgi">
+                <option value="">— ne —</option>
+                <option value="OBCHOD-HGI-MANUAL">Hydrogeologický posudek</option>
+              </select>
+            </div>
+            <div class="compound-sub">
+              <label>Cena bez DPH <span class="key" style="display:inline">price_obchod_hgi</span></label>
+              <input type="number" name="price_obchod_hgi" min="0" step="500" placeholder="Kč">
+            </div>
+          </div>
+        </div>
+        <div class="compound">
+          <label>Projektová dokumentace</label>
+          <div class="compound-row no-price">
+            <div class="compound-sub">
+              <label>Zahrnout</label>
+              <select name="item_obchod_projekt">
+                <option value="">— ne —</option>
+                <option value="OBCHOD-PROJEKT-MANUAL">Projektová dokumentace</option>
+              </select>
+            </div>
+            <div class="compound-sub">
+              <label>Cena bez DPH <span class="key" style="display:inline">price_obchod_projekt</span></label>
+              <input type="number" name="price_obchod_projekt" min="0" step="500" placeholder="Kč">
+            </div>
+          </div>
+        </div>
+        <div class="compound">
+          <label>Administrativa a povolení</label>
+          <div class="compound-row no-price">
+            <div class="compound-sub">
+              <label>Zahrnout</label>
+              <select name="item_obchod_admin">
+                <option value="">— ne —</option>
+                <option value="OBCHOD-ADMIN-MANUAL">Administrativa a povolení</option>
+              </select>
+            </div>
+            <div class="compound-sub">
+              <label>Cena bez DPH <span class="key" style="display:inline">price_obchod_admin</span></label>
+              <input type="number" name="price_obchod_admin" min="0" step="500" placeholder="Kč">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Result card (shown after generation) -->
+    <div class="result-card" id="result-card">
+      <div class="result-num" id="result-num"></div>
+      <div class="result-total" id="result-total"></div>
+      <a href="#" id="result-link" class="result-link" target="_blank">📄 Stáhnout PDF →</a>
+    </div>
+
+  </form>
+</main>
+
+<div class="controls">
+  <div class="status-text" id="status-text">Připraveno.</div>
+  <div class="actions">
+    <button class="btn-secondary" id="btn-save-pd" type="button" title="Uložit hodnoty do Pipedrive custom fields (vyžaduje mapování)">Uložit do Pipedrive</button>
+    <button class="btn-primary" id="btn-generate" type="button">⚡ Generovat CN</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@pipedrive/app-extensions-sdk@0/dist/index.umd.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var API_BASE = 'https://dvcxqjlbyajqnkylmdya.supabase.co/functions/v1/api';
+  var MODAL_SIZE = { width: 940, height: 820 };
+  var LS_KEY = 'cn_manual_form_';
+
+  var sdk = null;
+  var sdkReady = false;
+  var dealId = 0;
+  var params = new URLSearchParams(location.search);
+
+  // ── DOM refs ──────────────────────────────────────────────
+  var form       = document.getElementById('form');
+  var msgEl      = document.getElementById('msg');
+  var statusText = document.getElementById('status-text');
+  var btnGen     = document.getElementById('btn-generate');
+  var btnSavePd  = document.getElementById('btn-save-pd');
+  var btnClear   = document.getElementById('btn-clear');
+  var btnReload  = document.getElementById('btn-reload');
+  var resultCard = document.getElementById('result-card');
+  var resultNum  = document.getElementById('result-num');
+  var resultTotal= document.getElementById('result-total');
+  var resultLink = document.getElementById('result-link');
+
+  // ── Helpers ───────────────────────────────────────────────
+  function parseDealId() {
+    var d = params.get('dealId');
+    if (d && !isNaN(+d)) return +d;
+    var sel = params.get('selectedIds');
+    if (sel) { var f = sel.split(',')[0]; if (!isNaN(+f)) return +f; }
+    return 0;
+  }
+
+  function showMsg(text, type) {
+    if (!text) { msgEl.style.display = 'none'; return; }
+    msgEl.textContent = text;
+    msgEl.className = 'msg' + (type ? ' ' + type : '');
+    msgEl.style.display = 'block';
+  }
+
+  function setStatus(text) { statusText.textContent = text; }
+
+  function fmtCzk(n) {
+    return new Intl.NumberFormat('cs-CZ', { style: 'currency', currency: 'CZK', maximumFractionDigits: 0 }).format(n);
+  }
+
+  // ── Group toggle ──────────────────────────────────────────
+  window.toggleGroup = function(head) {
+    var body = head.nextElementSibling;
+    body.classList.toggle('open');
+  };
+
+  // ── Conditional visibility ────────────────────────────────
+  window.onCovChange = function() {
+    var hasCov = !!document.getElementById('f_typ_cov').value;
+    ['row_zalozeni_cov','row_betonaz','row_okruh_wc','row_cov_prislusenstvi'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.style.display = hasCov ? '' : 'none';
+    });
+    saveToLocalStorage();
+  };
+
+  window.onNadrzChange = function() {
+    var hasNadrz = !!document.getElementById('f_typ_nadrze').value;
+    ['row_pocet_nadrzi','row_zalozeni_nadrze','row_nadrz_prislusenstvi'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.style.display = hasNadrz ? '' : 'none';
+    });
+    onPocetNadrzChange();
+    saveToLocalStorage();
+  };
+
+  window.onPocetNadrzChange = function() {
+    var pocet = parseInt(document.getElementById('f_pocet_nadrzi').value, 10);
+    var el = document.getElementById('row_potvrzeni_propojeni');
+    if (el) el.style.display = (pocet > 1) ? '' : 'none';
+  };
+
+  window.onVsakItemChange = function() {
+    var hasVsak = !!form.querySelector('[name="item_vsak_tunel"]').value;
+    document.getElementById('vsak_rozmery').style.display = hasVsak ? '' : 'none';
+    saveToLocalStorage();
+  };
+
+  window.onCompoundItem = function(sel, suffix) {
+    saveToLocalStorage();
+  };
+
+  // ── LocalStorage ──────────────────────────────────────────
+  function lsKey() { return LS_KEY + (dealId || 'noId'); }
+
+  function saveToLocalStorage() {
+    try {
+      var data = collectAll(false);
+      localStorage.setItem(lsKey(), JSON.stringify(data));
+    } catch(_) {}
+  }
+
+  function restoreFromLocalStorage() {
+    try {
+      var raw = localStorage.getItem(lsKey());
+      if (!raw) return;
+      var data = JSON.parse(raw);
+      for (var name in data) {
+        var el = form.querySelector('[name="' + name + '"]');
+        if (!el) continue;
+        el.value = data[name] === null ? '' : String(data[name]);
       }
+      // Trigger visibility updates
+      onCovChange();
+      onNadrzChange();
+      onVsakItemChange();
+    } catch(_) {}
+  }
 
-      function setMessage(text, type) {
-        message.textContent = text;
-        message.className = 'status' + (type ? ' ' + type : '');
-        message.style.display = text ? 'block' : 'none';
+  // ── Value collection ──────────────────────────────────────
+  var NUM_NAMES = new Set([
+    'vat_rate','marze_pct','sleva_pct','sleva_kc','dotace_kc',
+    'delka_potrubi','pocet_nadrzi',
+    'plocha_vsaku_m2','objem_vsaku_m3','sterk_vsak_m3','objem_vykopu_vsak_m3','bagr_hod_vsak',
+    'qty_cov_prislusenstvi','price_cov_prislusenstvi',
+    'qty_nadrz_prislusenstvi','price_nadrz_prislusenstvi',
+    'qty_vsak_tunel','price_vsak_tunel',
+    'qty_septik_septik','price_septik_septik',
+    'qty_septik_filtr','price_septik_filtr',
+    'qty_zemina_odvoz','qty_zemina_likvidace','qty_zemina_hutneni','qty_zemina_pruraz',
+    'price_obchod_hgi','price_obchod_projekt','price_obchod_admin',
+  ]);
+  var BOOL_NAMES = new Set([
+    'okruh_wc','rozvody','kontrolni_zaver_vsak','potvrzeni_propojeni_nadrzi',
+  ]);
+
+  function collectAll(forApi) {
+    var vars = {};
+    Array.prototype.forEach.call(form.elements, function(el) {
+      if (!el.name || el.name === '') return;
+      var val = el.value.trim();
+      if (val === '' || val === '0' && el.type === 'number' && !el.value) return;
+      if (val === '') return;
+
+      if (NUM_NAMES.has(el.name)) {
+        var n = parseFloat(val);
+        if (!isNaN(n) && n !== 0) vars[el.name] = n;
+        else if (isNaN(n) || n === 0) {} // skip zeros & NaN for optional fields
+      } else if (BOOL_NAMES.has(el.name)) {
+        if (val === 'true') vars[el.name] = true;
+        else if (val === 'false') vars[el.name] = false;
+      } else {
+        vars[el.name] = val;
       }
+    });
 
-      function setBusy(busy) {
-        btnSave.disabled = busy || changedValues().count === 0;
-        btnSaveClose.disabled = btnSave.disabled;
-        btnReset.disabled = busy || changedValues().count === 0;
-        btnReload.disabled = busy;
-      }
+    // vat_rate=0 is valid
+    var vatEl = document.getElementById('f_vat_rate');
+    if (vatEl && vatEl.value !== '') vars['vat_rate'] = parseFloat(vatEl.value);
 
-      function escapeHtml(value) {
-        return String(value)
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;');
-      }
+    return vars;
+  }
 
-      function rawValue(value) {
-        if (value === null || value === undefined) return '';
-        if (Array.isArray(value)) {
-          return value.map(function (item) {
-            return typeof item === 'object' && item !== null && 'id' in item ? String(item.id) : String(item);
-          }).join(',');
-        }
-        if (typeof value === 'object' && 'id' in value) return String(value.id);
-        return String(value);
-      }
+  // ── SDK & auth ────────────────────────────────────────────
+  async function initSdk() {
+    try {
+      var id = params.get('id');
+      sdk = new AppExtensionsSDK(id ? { identifier: id } : undefined);
+      var ctx = await sdk.initialize({ size: MODAL_SIZE });
+      sdkReady = true;
+      try {
+        await sdk.execute(AppExtensionsSDK.Command.RESIZE, MODAL_SIZE);
+      } catch(_) {}
+      if (ctx && ctx.id && !isNaN(+ctx.id)) dealId = +ctx.id;
+    } catch(e) {
+      sdkReady = false;
+      showMsg('Stránka neběží v Pipedrive modalu — SDK nedostupné. Deal ID z URL: ' + (dealId || '?'), 'warn');
+    }
+  }
 
-      function selectedSet(value) {
-        var raw = rawValue(value);
-        if (!raw) return new Set();
-        return new Set(raw.split(',').map(function (item) { return item.trim(); }).filter(Boolean));
-      }
+  async function getToken() {
+    if (!sdkReady || !sdk) throw new Error('Pipedrive SDK není připravené.');
+    var r = await sdk.execute(AppExtensionsSDK.Command.GET_SIGNED_TOKEN);
+    if (!r || !r.token) throw new Error('Neplatný token.');
+    return r.token;
+  }
 
-      function isNumericField(field) {
-        return field.fieldType === 'int' || field.fieldType === 'double' || field.fieldType === 'monetary' ||
-          (field.transform && field.transform.kind === 'number') ||
-          /^((qty|price)_|vat_rate$|marze_pct$|sleva_pct$|sleva_kc$|dotace_kc$|pocet_|delka_|objem_)/.test(field.internalKey);
-      }
+  async function apiFetch(path, opts) {
+    var token = await getToken();
+    var res = await fetch(API_BASE + path, Object.assign({
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }
+    }, opts || {}));
+    var data = await res.json().catch(function() { return null; });
+    if (!res.ok || (data && data.ok === false)) {
+      var issues = data && data.issues;
+      var msg = (data && data.error) || ('HTTP ' + res.status);
+      if (issues && issues.length) msg += '\n' + issues.map(function(i) { return '• ' + i.message; }).join('\n');
+      throw new Error(msg);
+    }
+    return data;
+  }
 
-      function isBooleanField(field) {
-        return field.fieldType === 'boolean' || (field.transform && field.transform.kind === 'boolean') ||
-          /^confirm_/.test(field.internalKey) || /^potvrzeni_/.test(field.internalKey) || /^include_/.test(field.internalKey);
-      }
+  // ── Generate CN ──────────────────────────────────────────
+  async function generate() {
+    if (!dealId) { showMsg('Chybí Deal ID — otevři modal z detailu dealu.', 'error'); return; }
+    var variables = collectAll(true);
+    if (!('vat_rate' in variables)) {
+      showMsg('DPH je povinné — vyber sazbu v sekci Obchodní podmínky.', 'error');
+      document.getElementById('f_vat_rate').classList.add('req-missing');
+      return;
+    }
+    document.getElementById('f_vat_rate').classList.remove('req-missing');
 
-      function renderControl(field) {
-        var value = rawValue(field.value);
-        var id = 'field-' + field.internalKey;
-        var common = ' id="' + escapeHtml(id) + '" name="' + escapeHtml(field.internalKey) + '"' +
-          ' data-field-type="' + escapeHtml(field.fieldType) + '"';
+    btnGen.disabled = true;
+    btnGen.textContent = '⏳ Generuji…';
+    showMsg('');
+    resultCard.classList.remove('show');
+    setStatus('Generuji CN…');
 
-        if (field.fieldType === 'set' && field.options && field.options.length) {
-          var selected = selectedSet(field.value);
-          return '<select multiple' + common + '>' +
-            field.options.map(function (option) {
-              var optionValue = String(option.id);
-              var text = option.label + (option.mapsTo ? ' → ' + option.mapsTo : '');
-              return '<option value="' + escapeHtml(optionValue) + '"' +
-                (selected.has(optionValue) ? ' selected' : '') + '>' + escapeHtml(text) + '</option>';
-            }).join('') +
-            '</select>';
-        }
-
-        if (field.options && field.options.length) {
-          return '<select' + common + '>' +
-            '<option value="">— nevyplněno —</option>' +
-            field.options.map(function (option) {
-              var optionValue = String(option.id);
-              var text = option.label + (option.mapsTo ? ' → ' + option.mapsTo : '');
-              return '<option value="' + escapeHtml(optionValue) + '"' +
-                (String(value) === optionValue ? ' selected' : '') + '>' + escapeHtml(text) + '</option>';
-            }).join('') +
-            '</select>';
-        }
-
-        if (isBooleanField(field)) {
-          var normalized = value === 'true' || value === '1' || value === 'ano' ? 'true' :
-            (value === 'false' || value === '0' || value === 'ne' ? 'false' : '');
-          return '<select' + common + '>' +
-            '<option value=""' + (normalized === '' ? ' selected' : '') + '>— nevyplněno —</option>' +
-            '<option value="true"' + (normalized === 'true' ? ' selected' : '') + '>Ano</option>' +
-            '<option value="false"' + (normalized === 'false' ? ' selected' : '') + '>Ne</option>' +
-            '</select>';
-        }
-
-        if (isNumericField(field)) {
-          return '<input type="number" step="any"' + common + ' value="' + escapeHtml(value.replace(',', '.')) + '">';
-        }
-
-        if (field.fieldType === 'date') {
-          return '<input type="date"' + common + ' value="' + escapeHtml(value) + '">';
-        }
-
-        if (field.fieldType === 'text') {
-          return '<textarea' + common + '>' + escapeHtml(value) + '</textarea>';
-        }
-
-        return '<input type="text"' + common + ' value="' + escapeHtml(value) + '">';
-      }
-
-      function renderField(field) {
-        var required = field.required ? ' <span class="required">*</span>' : '';
-        var source = field.mappingSource || 'saved';
-        var sourceLabel = source === 'direct'
-          ? 'přímý test'
-          : (source === 'implicit' ? 'auto podle názvu' : 'mapování');
-        var keyLabel = source === 'direct' ? 'nenalinkováno: přímý zápis do Pipedrive pole' : field.internalKey;
-        return '<div class="field-row" data-internal-key="' + escapeHtml(field.internalKey) + '">' +
-          '<div class="field-label">' +
-            '<label for="field-' + escapeHtml(field.internalKey) + '">' + escapeHtml(field.label) + required + '</label>' +
-            '<span class="source-badge ' + escapeHtml(source) + '">' + escapeHtml(sourceLabel) + '</span>' +
-            '<div class="key">' + escapeHtml(keyLabel) + '</div>' +
-            '<div class="key">' + escapeHtml(field.pipedriveFieldKey) + '</div>' +
-          '</div>' +
-          '<div>' +
-            renderControl(field) +
-            (field.helper ? '<div class="helper">' + escapeHtml(field.helper) + '</div>' : '') +
-          '</div>' +
-        '</div>';
-      }
-
-      function directInternalKey(fieldKey) {
-        return DIRECT_FIELD_PREFIX + fieldKey;
-      }
-
-      function directFieldHelper() {
-        return 'Testovací přímý zápis do Pipedrive pole. Do výpočtu se hodnota použije automaticky jen tehdy, když název pole odpovídá internímu klíči, nebo když pole později nalinkuješ v nastavení.';
-      }
-
-      function buildDirectDescriptor(meta) {
-        return {
-          internalKey: directInternalKey(meta.key),
-          pipedriveFieldKey: meta.key,
-          target: 'variable',
-          transform: { kind: 'string' },
-          label: meta.name,
-          fieldType: meta.fieldType || 'varchar',
-          options: meta.options || null,
-          value: meta.value,
-          group: 'direct_fields',
-          groupLabel: 'Testovací nenalinkovaná pole',
-          required: false,
-          helper: directFieldHelper(),
-          mappingSource: 'direct',
-        };
-      }
-
-      function directPickerOptions() {
-        var used = new Set(fields.map(function (field) { return field.pipedriveFieldKey; }));
-        var remaining = availableUnmappedFields.filter(function (field) { return !used.has(field.key); });
-        if (!remaining.length) return '<option value="">Všechna nenalinkovaná pole jsou přidaná</option>';
-        return '<option value="">— vyber pole pro test —</option>' +
-          remaining.map(function (field) {
-            return '<option value="' + escapeHtml(field.key) + '">' +
-              escapeHtml(field.name + ' · ' + field.fieldType) +
-              '</option>';
-          }).join('');
-      }
-
-      function renderDirectPicker() {
-        if (!availableUnmappedFields.length) return '';
-        return '<section class="group">' +
-          '<h2><span>Testovací nenalinkovaná pole</span><span class="group-count">' + availableUnmappedFields.length + '</span></h2>' +
-          '<div class="direct-picker">' +
-            '<label for="direct-field-picker">Přidat Pipedrive pole bez trvalého mapování</label>' +
-            '<select id="direct-field-picker">' + directPickerOptions() + '</select>' +
-            '<div class="helper">' + escapeHtml(directFieldHelper()) + '</div>' +
-          '</div>' +
-          '<div id="direct-fields"></div>' +
-          '</section>';
-      }
-
-      function bindInitialValue(control) {
-        if (!control || !control.name) return;
-        control.dataset.initial = JSON.stringify(readControl(control.name));
-      }
-
-      function bindDirectPicker() {
-        var picker = document.getElementById('direct-field-picker');
-        if (!picker) return;
-        picker.addEventListener('change', function () {
-          if (!picker.value) return;
-          appendDirectField(picker.value);
-          picker.value = '';
-          picker.innerHTML = directPickerOptions();
-        });
-      }
-
-      function appendDirectField(fieldKey) {
-        var meta = availableUnmappedFields.find(function (field) { return field.key === fieldKey; });
-        if (!meta) return;
-        var internalKey = directInternalKey(fieldKey);
-        if (fields.some(function (field) { return field.internalKey === internalKey; })) return;
-        var descriptor = buildDirectDescriptor(meta);
-        fields.push(descriptor);
-        var container = document.getElementById('direct-fields');
-        if (!container) return;
-        container.insertAdjacentHTML('beforeend', renderField(descriptor));
-        var control = form.elements[internalKey];
-        if (control) bindInitialValue(control);
-        updateDirtyState();
-      }
-
-      function render(payload) {
-        lastPayload = payload;
-        fields = payload.fields || [];
-        availableUnmappedFields = payload.availableUnmappedFields || [];
-        document.getElementById('deal-title').textContent =
-          (payload.dealTitle ? payload.dealTitle + ' · ' : '') + 'Deal #' + payload.dealId;
-
-        if (!fields.length && !availableUnmappedFields.length) {
-          form.innerHTML = '<div class="group"><div class="empty">Nejsou uložená žádná mapování polí. Nejdřív je nastav v administraci.</div></div>';
-          form.style.display = 'block';
-          setMessage('Není co vyplnit.', 'warn');
-          updateDirtyState();
-          return;
-        }
-
-        var html = '<div class="summary">' +
-          '<span class="pill">' + fields.length + ' polí</span>' +
-          '<span class="pill">' + filledCount(fields) + ' vyplněno</span>' +
-          '<span class="pill">' + availableUnmappedFields.length + ' nenalinkovaných k testu</span>' +
-          '<span class="pill">hodnoty se ukládají přímo do dealu</span>' +
-          '</div>';
-
-        (payload.groups || []).forEach(function (group) {
-          var groupFields = fields.filter(function (field) { return field.group === group.key; });
-          if (!groupFields.length) return;
-          html += '<section class="group">' +
-            '<h2><span>' + escapeHtml(group.label) + '</span><span class="group-count">' + groupFields.length + '</span></h2>' +
-            groupFields.map(renderField).join('') +
-            '</section>';
-        });
-        html += renderDirectPicker();
-
-        form.innerHTML = html;
-        form.style.display = 'block';
-        Array.prototype.forEach.call(form.elements, function (control) {
-          if (!control.name) return;
-          bindInitialValue(control);
-        });
-        bindDirectPicker();
-        setMessage('', '');
-        updateDirtyState();
-      }
-
-      function filledCount(items) {
-        return items.filter(function (field) {
-          var value = rawValue(field.value);
-          return value !== '';
-        }).length;
-      }
-
-      function readControl(internalKey) {
-        var field = fields.find(function (item) { return item.internalKey === internalKey; });
-        var control = form.elements[internalKey];
-        if (!field || !control) return null;
-
-        if (field.fieldType === 'set') {
-          return Array.prototype.map.call(control.selectedOptions || [], function (option) { return option.value; });
-        }
-        var value = control.value;
-        if (value === '') return null;
-        if (isBooleanField(field)) return value === 'true';
-        if (isNumericField(field)) {
-          var number = Number(String(value).replace(',', '.'));
-          return Number.isFinite(number) ? number : null;
-        }
-        return value;
-      }
-
-      function changedValues() {
-        var values = {};
-        var count = 0;
-        Array.prototype.forEach.call(form.elements, function (control) {
-          if (!control.name) return;
-          var current = readControl(control.name);
-          var initial = control.dataset.initial || 'null';
-          var now = JSON.stringify(current);
-          var row = form.querySelector('[data-internal-key="' + cssEscape(control.name) + '"]');
-          var changed = now !== initial;
-          if (row) row.classList.toggle('changed', changed);
-          if (changed) {
-            values[control.name] = current;
-            count += 1;
-          }
-        });
-        return { values: values, count: count };
-      }
-
-      function cssEscape(value) {
-        if (window.CSS && CSS.escape) return CSS.escape(value);
-        return String(value).replace(/"/g, '\\"');
-      }
-
-      function updateDirtyState() {
-        var changed = changedValues();
-        dirtyInfo.textContent = changed.count === 0
-          ? 'Beze změn.'
-          : 'Změněno polí: ' + changed.count;
-        btnSave.disabled = changed.count === 0 || !sdkReady;
-        btnSaveClose.disabled = btnSave.disabled;
-        btnReset.disabled = changed.count === 0;
-      }
-
-      async function initSdk() {
-        try {
-          var identifier = params.get('id') || undefined;
-          sdk = new AppExtensionsSDK(identifier ? { identifier: identifier } : undefined);
-          var context = await sdk.initialize({ size: MODAL_SIZE });
-          sdkReady = true;
-          try {
-            var resizeCommand = (typeof AppExtensionsSDK !== 'undefined' && AppExtensionsSDK.Command && AppExtensionsSDK.Command.RESIZE)
-              ? AppExtensionsSDK.Command.RESIZE
-              : 'resize';
-            await sdk.execute(resizeCommand, MODAL_SIZE);
-          } catch (_) {
-            // Hostitel může šířku modalu řídit konfigurací rozšíření; stránka zůstává funkční.
-          }
-          if (context && context.id && !isNaN(parseInt(context.id, 10))) {
-            dealId = parseInt(context.id, 10);
-          }
-        } catch (err) {
-          sdkReady = false;
-          setMessage('Stránka neběží v Pipedrive modalu, nelze získat podepsaný token.', 'error');
-        }
-      }
-
-      async function getSignedToken() {
-        if (!sdkReady || !sdk) throw new Error('Pipedrive SDK není připravené.');
-        var command = (typeof AppExtensionsSDK !== 'undefined' && AppExtensionsSDK.Command)
-          ? AppExtensionsSDK.Command.GET_SIGNED_TOKEN
-          : 'get_signed_token';
-        var result = await sdk.execute(command);
-        if (!result || !result.token) throw new Error('Pipedrive nevrátil podepsaný token.');
-        return result.token;
-      }
-
-      async function apiFetch(path, options) {
-        var token = await getSignedToken();
-        var res = await fetch(API_BASE + path, Object.assign({
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token,
-          },
-        }, options || {}));
-        var data = await res.json().catch(function () { return null; });
-        if (!res.ok || !data || data.ok === false) {
-          throw new Error((data && data.error) || ('API chyba ' + res.status));
-        }
-        return data;
-      }
-
-      async function load() {
-        form.style.display = 'none';
-        setMessage('Načítám ruční pole z dealu…', '');
-        if (!dealId || dealId <= 0) {
-          setMessage('Nepodařilo se zjistit ID dealu. Modal musí být otevřený z detailu dealu nebo s parametrem selectedIds/dealId.', 'error');
-          return;
-        }
-        try {
-          var data = await apiFetch('/deal/manual-fields?dealId=' + encodeURIComponent(dealId));
-          render(data);
-        } catch (err) {
-          setMessage('Načtení selhalo: ' + err.message, 'error');
-        }
-      }
-
-      async function save(closeAfter) {
-        var changed = changedValues();
-        if (changed.count === 0) return;
-        setBusy(true);
-        setMessage('Ukládám změny do Pipedrive dealu…', '');
-        try {
-          var result = await apiFetch('/deal/manual-fields', {
-            method: 'PUT',
-            body: JSON.stringify({ dealId: dealId, values: changed.values }),
-          });
-          setMessage('Uloženo. Aktualizovaných polí: ' + result.updated + '.', 'success');
-          await load();
-          if (closeAfter) await closeModal();
-        } catch (err) {
-          setMessage('Uložení selhalo: ' + err.message, 'error');
-          updateDirtyState();
-        } finally {
-          setBusy(false);
-        }
-      }
-
-      async function closeModal() {
-        if (!sdkReady || !sdk) return;
-        try {
-          await sdk.execute('close_modal');
-        } catch (_) {
-          // Některé verze SDK zavření modalu nepodporují; uložená data zůstávají.
-        }
-      }
-
-      form.addEventListener('input', updateDirtyState);
-      form.addEventListener('change', updateDirtyState);
-      btnReload.addEventListener('click', load);
-      btnReset.addEventListener('click', function () {
-        if (lastPayload) render(lastPayload);
+    try {
+      var data = await apiFetch('/quote/generate', {
+        method: 'POST',
+        body: JSON.stringify({ dealId: dealId, variables: variables }),
       });
-      btnSave.addEventListener('click', function () { save(false); });
-      btnSaveClose.addEventListener('click', function () { save(true); });
+      resultNum.textContent = data.quoteNumber;
+      resultTotal.textContent = fmtCzk(data.total) + ' s DPH';
+      resultLink.href = data.fileUrl || '#';
+      resultCard.classList.add('show');
+      showMsg('CN ' + data.quoteNumber + ' vygenerována!', 'success');
+      setStatus('Hotovo: ' + data.quoteNumber);
+    } catch(err) {
+      showMsg('Generování selhalo: ' + err.message, 'error');
+      setStatus('Chyba.');
+    } finally {
+      btnGen.disabled = false;
+      btnGen.textContent = '⚡ Generovat CN';
+    }
+  }
 
-      (async function boot() {
-        await initSdk();
-        if (sdkReady) await load();
-      })();
-    })();
-  </script>
+  // ── Save to Pipedrive (existing flow) ─────────────────────
+  async function saveToPipedrive() {
+    if (!dealId) { showMsg('Chybí Deal ID.', 'error'); return; }
+    var variables = collectAll(true);
+    btnSavePd.disabled = true;
+    setStatus('Ukládám do Pipedrive…');
+    try {
+      var data = await apiFetch('/deal/manual-fields', {
+        method: 'PUT',
+        body: JSON.stringify({ dealId: dealId, values: variables }),
+      });
+      showMsg('Uloženo do Pipedrive. Aktualizováno polí: ' + data.updated + '.', 'success');
+      setStatus('Uloženo.');
+    } catch(err) {
+      showMsg('Uložení do Pipedrive selhalo: ' + err.message, 'error');
+      setStatus('Chyba uložení.');
+    } finally {
+      btnSavePd.disabled = false;
+    }
+  }
+
+  // ── Load deal title ───────────────────────────────────────
+  async function loadDealTitle() {
+    if (!dealId) {
+      document.getElementById('deal-title').textContent = 'Deal ID nezjištěno';
+      return;
+    }
+    document.getElementById('deal-title').textContent = 'Deal #' + dealId;
+    // Pokud SDK nedostupné, zkus aspoň zobrazit ID
+    if (!sdkReady) return;
+    try {
+      var data = await apiFetch('/deal/manual-fields?dealId=' + dealId);
+      if (data.dealTitle) {
+        document.getElementById('deal-title').textContent = data.dealTitle + ' · #' + dealId;
+      }
+    } catch(_) {}
+  }
+
+  // ── Events ────────────────────────────────────────────────
+  btnGen.addEventListener('click', generate);
+  btnSavePd.addEventListener('click', saveToPipedrive);
+  btnClear.addEventListener('click', function() {
+    if (!confirm('Vymazat všechna pole?')) return;
+    form.reset();
+    try { localStorage.removeItem(lsKey()); } catch(_) {}
+    onCovChange();
+    onNadrzChange();
+    onVsakItemChange();
+    resultCard.classList.remove('show');
+    showMsg('');
+    setStatus('Vymazáno.');
+  });
+  btnReload.addEventListener('click', function() {
+    restoreFromLocalStorage();
+    loadDealTitle();
+    showMsg('Hodnoty obnoveny z uložených dat.', '');
+  });
+  form.addEventListener('change', saveToLocalStorage);
+
+  // ── Boot ──────────────────────────────────────────────────
+  (async function boot() {
+    dealId = parseDealId();
+    await initSdk();
+    restoreFromLocalStorage();
+    await loadDealTitle();
+    setStatus('Připraveno. Deal #' + (dealId || '?'));
+  })();
+
+})();
+</script>
 </body>
 </html>
