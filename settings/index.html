@@ -374,6 +374,19 @@
     .cenik-empty { font-size: 11px; color: #aaa; padding: 6px 8px; font-style: italic; }
     .cenik-price { font-variant-numeric: tabular-nums; white-space: nowrap; }
     .cenik-badges { display: flex; gap: 4px; flex-wrap: wrap; }
+    .cenik-editor {
+      display: none;
+      margin: 12px 0;
+      padding: 12px;
+      border: 1px solid #d5c5e8;
+      border-radius: 6px;
+      background: #faf7fd;
+    }
+    .cenik-editor.open { display: block; }
+    .cenik-editor-grid { display: grid; grid-template-columns: repeat(3, minmax(120px, 1fr)); gap: 8px; margin-top: 8px; }
+    .cenik-editor label { font-size: 11px; color: #555; display: grid; gap: 4px; }
+    .cenik-editor input { width: 100%; border: 1px solid #cfc4db; border-radius: 4px; padding: 6px; font: inherit; }
+    .cenik-editor-actions { display: flex; gap: 8px; margin-top: 10px; }
 
     /* ─── Výpočtové položky ──────────────────────────── */
     .vypoctove-note {
@@ -464,11 +477,26 @@
         <div id="cenik-banner" class="toast toast-warn" style="display:none;margin-bottom:10px;">
           Mimo Pipedrive — admin funkce nedostupné
         </div>
-        <p class="cenik-note">Náhled je jen ke čtení. Ceny se upravují zatím v DB / e-shopu; editor přijde později.</p>
+        <p class="cenik-note">Změna položky vždy publikuje novou verzi ceníku. Starší CN zůstávají navázané na původní snapshot a jejich ceny se nezmění.</p>
         <div class="cenik-toolbar">
           <button class="btn btn-secondary" id="btn-load-cenik" type="button">Načíst / obnovit ceník</button>
           <input class="cenik-filter" id="cenik-filter" type="text" placeholder="Filtrovat podle kódu nebo názvu…" disabled />
         </div>
+        <form id="cenik-editor" class="cenik-editor" novalidate>
+          <strong>Úprava položky <code id="cenik-editor-code"></code></strong>
+          <div class="cenik-editor-grid">
+            <label>Název<input id="cenik-editor-name" required /></label>
+            <label>Jednotka<input id="cenik-editor-unit" required /></label>
+            <label>Cena / MJ bez DPH<input id="cenik-editor-price" type="number" min="0" step="0.01" required /></label>
+            <label>Nákupní cena / MJ<input id="cenik-editor-purchase-price" type="number" min="0" step="0.01" /></label>
+            <label>DPH (0,12 = 12 %)<input id="cenik-editor-vat" type="number" min="0" max="1" step="0.01" required /></label>
+          </div>
+          <p class="cenik-note">Položky s nulovou cenou jsou záměrně ruční: cenu je potřeba dodat na dealu nebo ji předem doplnit do ceníku.</p>
+          <div class="cenik-editor-actions">
+            <button class="btn btn-primary" type="submit">Publikovat novou verzi</button>
+            <button class="btn btn-secondary" id="btn-cenik-cancel" type="button">Zrušit</button>
+          </div>
+        </form>
         <div id="cenik-loading" class="cenik-loading" style="display:none;">Načítám ceník…</div>
         <div id="cenik-toast" class="toast"></div>
         <div id="cenik-tree"></div>
@@ -517,6 +545,12 @@
               <li><code>delka_potrubi</code> a <code>pocet_dni_realizace</code> — číselné hodnoty; transformace <strong>Číslo</strong>.</li>
               <li><code>minidumper</code>, <code>vysoka_spodni_voda</code> a <code>okruh_wc</code> — ano/ne; transformace <strong>Ano/ne</strong>.</li>
               <li><code>betonaz</code> — způsob betonáže; transformace <strong>Výčet</strong>, např. na hodnotu <code>obetonovani</code>.</li>
+              <li><code>vat_rate</code> — povinná sazba DPH z dealu; transformace <strong>Číslo</strong>, hodnota <code>12</code> nebo <code>21</code>.</li>
+              <li><code>plocha_vsaku_m2</code>, <code>sterk_vsak_m3</code>, <code>objem_vykopu_vsak_m3</code> nebo <code>bagr_hod_vsak</code> — číselné vstupy pro výpočet vsaku. Geotextilie = 2/3 plochy, bagr = objem výkopu / 4 h.</li>
+              <li><code>kontrolni_zaver_vsak</code> — ano/ne volba pro kontrolní závěr DN200 + trubku.</li>
+              <li><code>objem_vsaku_m3</code> a <code>vzdalenost_km</code> — číselné vstupy pro potvrzený rozsah.</li>
+              <li><code>item_cov_*</code>, <code>item_nadrz_*</code>, <code>item_vsak_*</code>, <code>item_septik_*</code>, <code>item_zemina_*</code>, <code>item_obchod_*</code> — výběr položky z ceníku. Výčet mapujte na přesný kód položky. Pro ruční cenu, množství nebo potvrzení přidejte odpovídající <code>price_*</code>, <code>qty_*</code> a <code>confirm_*</code>.</li>
+              <li><code>sleva_pct</code>, <code>sleva_kc</code>, <code>sleva_duvod</code> a <code>dotace_kc</code> — obchodní vstupy. Sleva bez důvodu se nevygeneruje.</li>
             </ul>
             <p>Místně závislé skutečnosti (geologie, doprava nebo přístupnost) nemapujte jako automatický odhad. Musí mít potvrzený vstup z dealu.</p>
           </div>
@@ -944,14 +978,20 @@
       'use strict';
 
       // ── Labels ────────────────────────────────────────────────────────────
-      const KATEGORIE_ORDER = ['nadrz', 'cov', 'septik'];
-      const KATEGORIE_LABELS = { nadrz: 'Nádrž', cov: 'ČOV', septik: 'Septik' };
+      const KATEGORIE_ORDER = ['nadrz', 'cov', 'septik', 'vsak', 'zemina', 'obchod'];
+      const KATEGORIE_LABELS = {
+        nadrz: 'Nádrž', cov: 'ČOV', septik: 'Septik', vsak: 'Vsakovací systém',
+        zemina: 'Zemní práce navíc', obchod: 'Projektové a obchodní položky'
+      };
 
-      const CINNOST_ORDER = ['svody', 'vsak', 'realizace_technologie'];
+      const CINNOST_ORDER = ['realizace_technologie', 'prislusenstvi', 'svody', 'vsak', 'zemina', 'obchod'];
       const CINNOST_LABELS = {
         svody: 'Svody a rozvody vody',
         vsak: 'Vsak',
         realizace_technologie: 'Realizace technologie',
+        prislusenstvi: 'Příslušenství',
+        zemina: 'Zemní práce',
+        obchod: 'Obchodní položky',
       };
 
       // ── State ─────────────────────────────────────────────────────────────
@@ -984,11 +1024,11 @@
         return result.token;
       }
 
-      async function cenikApiFetch(path) {
+      async function cenikApiFetch(path, options) {
         var token = await cenikGetToken();
-        var res = await fetch(_cenikApiBase + path, {
+        var res = await fetch(_cenikApiBase + path, Object.assign({
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-        });
+        }, options || {}));
         return res.json();
       }
 
@@ -1030,7 +1070,8 @@
           '<td>' + escHtml(item.name) + '</td>' +
           '<td style="white-space:nowrap">' + escHtml(item.unit) + '</td>' +
           '<td class="cenik-price">' + fmtPrice(item.unitPrice) + '</td>' +
-          '<td><div class="cenik-badges">' + badges + '</div></td>';
+          '<td><div class="cenik-badges">' + badges + '</div></td>' +
+          '<td><button class="btn btn-secondary cenik-edit" type="button" data-code="' + escHtml(item.code) + '">Upravit</button></td>';
         return tr;
       }
 
@@ -1063,7 +1104,7 @@
           tbl.innerHTML =
             '<thead><tr>' +
             '<th>Kód</th><th>Název</th><th>MJ</th>' +
-            '<th>Nákladová cena / MJ</th><th></th>' +
+             '<th>Cena / MJ</th><th></th><th></th>' +
             '</tr></thead>';
           var tbody = document.createElement('tbody');
           items.forEach(function (item) { tbody.appendChild(buildItemRow(item)); });
@@ -1182,6 +1223,60 @@
         }
       }
 
+      var _editingCode = null;
+      function closeEditor() {
+        _editingCode = null;
+        document.getElementById('cenik-editor').classList.remove('open');
+      }
+      function openEditor(code) {
+        var item = _allItems.find(function (candidate) { return candidate.code === code; });
+        if (!item) return;
+        _editingCode = item.code;
+        document.getElementById('cenik-editor-code').textContent = item.code;
+        document.getElementById('cenik-editor-name').value = item.name;
+        document.getElementById('cenik-editor-unit').value = item.unit;
+        document.getElementById('cenik-editor-price').value = item.unitPrice;
+        document.getElementById('cenik-editor-purchase-price').value =
+          item.purchasePrice === null || item.purchasePrice === undefined ? '' : item.purchasePrice;
+        document.getElementById('cenik-editor-vat').value = item.vatRate;
+        document.getElementById('cenik-editor').classList.add('open');
+        document.getElementById('cenik-editor').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+      async function publishEditor(event) {
+        event.preventDefault();
+        if (!_editingCode) return;
+        var price = Number(document.getElementById('cenik-editor-price').value);
+        var vat = Number(document.getElementById('cenik-editor-vat').value);
+        var purchaseRaw = document.getElementById('cenik-editor-purchase-price').value.trim();
+        var purchase = purchaseRaw === '' ? null : Number(purchaseRaw);
+        if (!Number.isFinite(price) || price < 0 || !Number.isFinite(vat) || vat < 0 || vat > 1) {
+          showCenikToast('Zadejte platnou cenu a DPH v rozsahu 0 až 1.', 'error');
+          return;
+        }
+        if (purchase !== null && (!Number.isFinite(purchase) || purchase < 0)) {
+          showCenikToast('Nákupní cena musí být nezáporné číslo.', 'error');
+          return;
+        }
+        try {
+          var res = await cenikApiFetch('/admin/price-items/' + encodeURIComponent(_editingCode), {
+            method: 'PUT',
+            body: JSON.stringify({
+              name: document.getElementById('cenik-editor-name').value.trim(),
+              unit: document.getElementById('cenik-editor-unit').value.trim(),
+              unitPrice: price,
+              vatRate: vat,
+              attrs: { purchase_price: purchase },
+            }),
+          });
+          if (!res.ok) throw new Error(res.error ? JSON.stringify(res.error) : 'Publikování selhalo');
+          closeEditor();
+          showCenikToast('Publikována verze ceníku ' + res.published.version_no + '.', 'success');
+          await loadCenik();
+        } catch (err) {
+          showCenikToast('Chyba ukládání: ' + err.message, 'error');
+        }
+      }
+
       // ── Event wiring ──────────────────────────────────────────────────────
       document.getElementById('btn-load-cenik').addEventListener('click', function () {
         _cenikLoaded = true;
@@ -1191,6 +1286,14 @@
       document.getElementById('cenik-filter').addEventListener('input', function () {
         applyFilter(this.value);
       });
+      document.getElementById('cenik-tree').addEventListener('click', function (event) {
+        var btn = event.target.closest('.cenik-edit');
+        if (!btn) return;
+        event.stopPropagation();
+        openEditor(btn.dataset.code);
+      });
+      document.getElementById('cenik-editor').addEventListener('submit', publishEditor);
+      document.getElementById('btn-cenik-cancel').addEventListener('click', closeEditor);
 
       // Load when section becomes visible (nav click) — lazy, first time only
       document.querySelectorAll('.nav-item').forEach(function (btn) {

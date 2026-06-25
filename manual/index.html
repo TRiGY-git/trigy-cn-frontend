@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ruční vstupy CN</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 14px;
+      color: #26212d;
+      background: #f6f3f8;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: #fff;
+      border-bottom: 1px solid #e2d8eb;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.2;
+      color: #3b244b;
+    }
+    .subtitle {
+      margin-top: 3px;
+      font-size: 12px;
+      color: #6f6478;
+    }
+    main { padding: 16px 18px 88px; }
+    .status {
+      border: 1px solid #ded3e8;
+      border-radius: 8px;
+      background: #fff;
+      padding: 12px 14px;
+      color: #5a4d66;
+      line-height: 1.45;
+    }
+    .status.error {
+      border-color: #efb9b1;
+      background: #fff5f3;
+      color: #9b2f22;
+    }
+    .status.success {
+      border-color: #a9d7b3;
+      background: #f0fff3;
+      color: #256535;
+    }
+    .status.warn {
+      border-color: #f0d487;
+      background: #fff9e8;
+      color: #765600;
+    }
+    .summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      border: 1px solid #ddcde8;
+      background: #fff;
+      color: #5f3c79;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .group {
+      background: #fff;
+      border: 1px solid #ded3e8;
+      border-radius: 10px;
+      margin-bottom: 14px;
+      overflow: hidden;
+      box-shadow: 0 1px 2px rgba(44, 28, 57, 0.04);
+    }
+    .group h2 {
+      margin: 0;
+      padding: 12px 14px;
+      font-size: 14px;
+      color: #3b244b;
+      background: #fbf8fd;
+      border-bottom: 1px solid #eee6f3;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+    }
+    .group-count {
+      color: #7d6b88;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .field-row {
+      display: grid;
+      grid-template-columns: minmax(180px, 260px) 1fr;
+      gap: 12px;
+      padding: 12px 14px;
+      border-bottom: 1px solid #f0e9f4;
+    }
+    .field-row:last-child { border-bottom: 0; }
+    .field-row.changed { background: #fffaf0; }
+    .field-label {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+    label {
+      font-weight: 700;
+      color: #2e2636;
+      line-height: 1.3;
+    }
+    .required { color: #b64231; }
+    .key {
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      font-size: 11px;
+      color: #7d6b88;
+      overflow-wrap: anywhere;
+    }
+    .helper {
+      margin-top: 5px;
+      font-size: 12px;
+      color: #6f6478;
+      line-height: 1.4;
+    }
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid #cfc0dc;
+      border-radius: 7px;
+      padding: 8px 9px;
+      font: inherit;
+      color: #26212d;
+      background: #fff;
+    }
+    select[multiple] { min-height: 110px; }
+    textarea { min-height: 74px; resize: vertical; }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #79489c;
+      box-shadow: 0 0 0 3px rgba(121, 72, 156, 0.14);
+    }
+    .controls {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 18px;
+      background: rgba(255, 255, 255, 0.96);
+      border-top: 1px solid #e2d8eb;
+      box-shadow: 0 -8px 20px rgba(44, 28, 57, 0.08);
+    }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    button {
+      border: 1px solid transparent;
+      border-radius: 7px;
+      padding: 9px 13px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+    .btn-primary { background: #79489c; color: #fff; border-color: #79489c; }
+    .btn-primary:hover:not(:disabled) { background: #62377f; }
+    .btn-secondary { background: #fff; color: #79489c; border-color: #79489c; }
+    .btn-secondary:hover:not(:disabled) { background: #f3edf8; }
+    .muted {
+      color: #7d6b88;
+      font-size: 12px;
+    }
+    .empty {
+      padding: 18px;
+      text-align: center;
+      color: #6f6478;
+    }
+    @media (max-width: 680px) {
+      .field-row { grid-template-columns: 1fr; }
+      header, main, .controls { padding-left: 12px; padding-right: 12px; }
+      .controls { align-items: stretch; flex-direction: column; }
+      .actions { width: 100%; }
+      .actions button { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Ruční vstupy pro cenovou nabídku</h1>
+      <div class="subtitle" id="deal-title">Načítám deal…</div>
+    </div>
+    <button class="btn-secondary" id="btn-reload" type="button">Načíst znovu</button>
+  </header>
+
+  <main>
+    <div id="message" class="status">Inicializuji Pipedrive modal a načítám namapovaná pole.</div>
+    <form id="manual-form" style="display:none"></form>
+  </main>
+
+  <div class="controls">
+    <div class="muted" id="dirty-info">Beze změn.</div>
+    <div class="actions">
+      <button class="btn-secondary" id="btn-reset" type="button" disabled>Vrátit změny</button>
+      <button class="btn-primary" id="btn-save" type="button" disabled>Uložit</button>
+      <button class="btn-primary" id="btn-save-close" type="button" disabled>Uložit a zavřít</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@pipedrive/app-extensions-sdk@0/dist/index.umd.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      var API_BASE = 'https://dvcxqjlbyajqnkylmdya.supabase.co/functions/v1/api';
+      var params = new URLSearchParams(location.search);
+      var sdk = null;
+      var sdkReady = false;
+      var dealId = parseDealId();
+      var fields = [];
+      var lastPayload = null;
+
+      var form = document.getElementById('manual-form');
+      var message = document.getElementById('message');
+      var dirtyInfo = document.getElementById('dirty-info');
+      var btnSave = document.getElementById('btn-save');
+      var btnSaveClose = document.getElementById('btn-save-close');
+      var btnReset = document.getElementById('btn-reset');
+      var btnReload = document.getElementById('btn-reload');
+
+      function parseDealId() {
+        var direct = params.get('dealId');
+        if (direct && !isNaN(parseInt(direct, 10))) return parseInt(direct, 10);
+        var selected = params.get('selectedIds');
+        if (selected) {
+          var first = selected.split(',')[0];
+          if (!isNaN(parseInt(first, 10))) return parseInt(first, 10);
+        }
+        return 0;
+      }
+
+      function setMessage(text, type) {
+        message.textContent = text;
+        message.className = 'status' + (type ? ' ' + type : '');
+        message.style.display = text ? 'block' : 'none';
+      }
+
+      function setBusy(busy) {
+        btnSave.disabled = busy || changedValues().count === 0;
+        btnSaveClose.disabled = btnSave.disabled;
+        btnReset.disabled = busy || changedValues().count === 0;
+        btnReload.disabled = busy;
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      function rawValue(value) {
+        if (value === null || value === undefined) return '';
+        if (Array.isArray(value)) {
+          return value.map(function (item) {
+            return typeof item === 'object' && item !== null && 'id' in item ? String(item.id) : String(item);
+          }).join(',');
+        }
+        if (typeof value === 'object' && 'id' in value) return String(value.id);
+        return String(value);
+      }
+
+      function selectedSet(value) {
+        var raw = rawValue(value);
+        if (!raw) return new Set();
+        return new Set(raw.split(',').map(function (item) { return item.trim(); }).filter(Boolean));
+      }
+
+      function isNumericField(field) {
+        return field.fieldType === 'int' || field.fieldType === 'double' || field.fieldType === 'monetary' ||
+          (field.transform && field.transform.kind === 'number') ||
+          /^((qty|price)_|vat_rate$|marze_pct$|sleva_pct$|sleva_kc$|dotace_kc$|pocet_|delka_|objem_)/.test(field.internalKey);
+      }
+
+      function isBooleanField(field) {
+        return field.fieldType === 'boolean' || (field.transform && field.transform.kind === 'boolean') ||
+          /^confirm_/.test(field.internalKey) || /^potvrzeni_/.test(field.internalKey) || /^include_/.test(field.internalKey);
+      }
+
+      function renderControl(field) {
+        var value = rawValue(field.value);
+        var id = 'field-' + field.internalKey;
+        var common = ' id="' + escapeHtml(id) + '" name="' + escapeHtml(field.internalKey) + '"' +
+          ' data-field-type="' + escapeHtml(field.fieldType) + '"';
+
+        if (field.fieldType === 'set' && field.options && field.options.length) {
+          var selected = selectedSet(field.value);
+          return '<select multiple' + common + '>' +
+            field.options.map(function (option) {
+              var optionValue = String(option.id);
+              var text = option.label + (option.mapsTo ? ' → ' + option.mapsTo : '');
+              return '<option value="' + escapeHtml(optionValue) + '"' +
+                (selected.has(optionValue) ? ' selected' : '') + '>' + escapeHtml(text) + '</option>';
+            }).join('') +
+            '</select>';
+        }
+
+        if (field.options && field.options.length) {
+          return '<select' + common + '>' +
+            '<option value="">— nevyplněno —</option>' +
+            field.options.map(function (option) {
+              var optionValue = String(option.id);
+              var text = option.label + (option.mapsTo ? ' → ' + option.mapsTo : '');
+              return '<option value="' + escapeHtml(optionValue) + '"' +
+                (String(value) === optionValue ? ' selected' : '') + '>' + escapeHtml(text) + '</option>';
+            }).join('') +
+            '</select>';
+        }
+
+        if (isBooleanField(field)) {
+          var normalized = value === 'true' || value === '1' || value === 'ano' ? 'true' :
+            (value === 'false' || value === '0' || value === 'ne' ? 'false' : '');
+          return '<select' + common + '>' +
+            '<option value=""' + (normalized === '' ? ' selected' : '') + '>— nevyplněno —</option>' +
+            '<option value="true"' + (normalized === 'true' ? ' selected' : '') + '>Ano</option>' +
+            '<option value="false"' + (normalized === 'false' ? ' selected' : '') + '>Ne</option>' +
+            '</select>';
+        }
+
+        if (isNumericField(field)) {
+          return '<input type="number" step="any"' + common + ' value="' + escapeHtml(value.replace(',', '.')) + '">';
+        }
+
+        if (field.fieldType === 'date') {
+          return '<input type="date"' + common + ' value="' + escapeHtml(value) + '">';
+        }
+
+        if (field.fieldType === 'text') {
+          return '<textarea' + common + '>' + escapeHtml(value) + '</textarea>';
+        }
+
+        return '<input type="text"' + common + ' value="' + escapeHtml(value) + '">';
+      }
+
+      function renderField(field) {
+        var required = field.required ? ' <span class="required">*</span>' : '';
+        return '<div class="field-row" data-internal-key="' + escapeHtml(field.internalKey) + '">' +
+          '<div class="field-label">' +
+            '<label for="field-' + escapeHtml(field.internalKey) + '">' + escapeHtml(field.label) + required + '</label>' +
+            '<div class="key">' + escapeHtml(field.internalKey) + '</div>' +
+            '<div class="key">' + escapeHtml(field.pipedriveFieldKey) + '</div>' +
+          '</div>' +
+          '<div>' +
+            renderControl(field) +
+            (field.helper ? '<div class="helper">' + escapeHtml(field.helper) + '</div>' : '') +
+          '</div>' +
+        '</div>';
+      }
+
+      function render(payload) {
+        lastPayload = payload;
+        fields = payload.fields || [];
+        document.getElementById('deal-title').textContent =
+          (payload.dealTitle ? payload.dealTitle + ' · ' : '') + 'Deal #' + payload.dealId;
+
+        if (!fields.length) {
+          form.innerHTML = '<div class="group"><div class="empty">Nejsou uložená žádná mapování polí. Nejdřív je nastav v administraci.</div></div>';
+          form.style.display = 'block';
+          setMessage('Není co vyplnit.', 'warn');
+          updateDirtyState();
+          return;
+        }
+
+        var html = '<div class="summary">' +
+          '<span class="pill">' + fields.length + ' polí</span>' +
+          '<span class="pill">' + filledCount(fields) + ' vyplněno</span>' +
+          '<span class="pill">hodnoty se ukládají přímo do dealu</span>' +
+          '</div>';
+
+        (payload.groups || []).forEach(function (group) {
+          var groupFields = fields.filter(function (field) { return field.group === group.key; });
+          if (!groupFields.length) return;
+          html += '<section class="group">' +
+            '<h2><span>' + escapeHtml(group.label) + '</span><span class="group-count">' + groupFields.length + '</span></h2>' +
+            groupFields.map(renderField).join('') +
+            '</section>';
+        });
+
+        form.innerHTML = html;
+        form.style.display = 'block';
+        Array.prototype.forEach.call(form.elements, function (control) {
+          if (!control.name) return;
+          control.dataset.initial = JSON.stringify(readControl(control.name));
+        });
+        setMessage('', '');
+        updateDirtyState();
+      }
+
+      function filledCount(items) {
+        return items.filter(function (field) {
+          var value = rawValue(field.value);
+          return value !== '';
+        }).length;
+      }
+
+      function readControl(internalKey) {
+        var field = fields.find(function (item) { return item.internalKey === internalKey; });
+        var control = form.elements[internalKey];
+        if (!field || !control) return null;
+
+        if (field.fieldType === 'set') {
+          return Array.prototype.map.call(control.selectedOptions || [], function (option) { return option.value; });
+        }
+        var value = control.value;
+        if (value === '') return null;
+        if (isBooleanField(field)) return value === 'true';
+        if (isNumericField(field)) {
+          var number = Number(String(value).replace(',', '.'));
+          return Number.isFinite(number) ? number : null;
+        }
+        return value;
+      }
+
+      function changedValues() {
+        var values = {};
+        var count = 0;
+        Array.prototype.forEach.call(form.elements, function (control) {
+          if (!control.name) return;
+          var current = readControl(control.name);
+          var initial = control.dataset.initial || 'null';
+          var now = JSON.stringify(current);
+          var row = form.querySelector('[data-internal-key="' + cssEscape(control.name) + '"]');
+          var changed = now !== initial;
+          if (row) row.classList.toggle('changed', changed);
+          if (changed) {
+            values[control.name] = current;
+            count += 1;
+          }
+        });
+        return { values: values, count: count };
+      }
+
+      function cssEscape(value) {
+        if (window.CSS && CSS.escape) return CSS.escape(value);
+        return String(value).replace(/"/g, '\\"');
+      }
+
+      function updateDirtyState() {
+        var changed = changedValues();
+        dirtyInfo.textContent = changed.count === 0
+          ? 'Beze změn.'
+          : 'Změněno polí: ' + changed.count;
+        btnSave.disabled = changed.count === 0 || !sdkReady;
+        btnSaveClose.disabled = btnSave.disabled;
+        btnReset.disabled = changed.count === 0;
+      }
+
+      async function initSdk() {
+        try {
+          var identifier = params.get('id') || undefined;
+          sdk = new AppExtensionsSDK(identifier ? { identifier: identifier } : undefined);
+          var context = await sdk.initialize({ size: { height: 720 } });
+          sdkReady = true;
+          if (context && context.id && !isNaN(parseInt(context.id, 10))) {
+            dealId = parseInt(context.id, 10);
+          }
+        } catch (err) {
+          sdkReady = false;
+          setMessage('Stránka neběží v Pipedrive modalu, nelze získat podepsaný token.', 'error');
+        }
+      }
+
+      async function getSignedToken() {
+        if (!sdkReady || !sdk) throw new Error('Pipedrive SDK není připravené.');
+        var command = (typeof AppExtensionsSDK !== 'undefined' && AppExtensionsSDK.Command)
+          ? AppExtensionsSDK.Command.GET_SIGNED_TOKEN
+          : 'get_signed_token';
+        var result = await sdk.execute(command);
+        if (!result || !result.token) throw new Error('Pipedrive nevrátil podepsaný token.');
+        return result.token;
+      }
+
+      async function apiFetch(path, options) {
+        var token = await getSignedToken();
+        var res = await fetch(API_BASE + path, Object.assign({
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token,
+          },
+        }, options || {}));
+        var data = await res.json().catch(function () { return null; });
+        if (!res.ok || !data || data.ok === false) {
+          throw new Error((data && data.error) || ('API chyba ' + res.status));
+        }
+        return data;
+      }
+
+      async function load() {
+        form.style.display = 'none';
+        setMessage('Načítám ruční pole z dealu…', '');
+        if (!dealId || dealId <= 0) {
+          setMessage('Nepodařilo se zjistit ID dealu. Modal musí být otevřený z detailu dealu nebo s parametrem selectedIds/dealId.', 'error');
+          return;
+        }
+        try {
+          var data = await apiFetch('/deal/manual-fields?dealId=' + encodeURIComponent(dealId));
+          render(data);
+        } catch (err) {
+          setMessage('Načtení selhalo: ' + err.message, 'error');
+        }
+      }
+
+      async function save(closeAfter) {
+        var changed = changedValues();
+        if (changed.count === 0) return;
+        setBusy(true);
+        setMessage('Ukládám změny do Pipedrive dealu…', '');
+        try {
+          var result = await apiFetch('/deal/manual-fields', {
+            method: 'PUT',
+            body: JSON.stringify({ dealId: dealId, values: changed.values }),
+          });
+          setMessage('Uloženo. Aktualizovaných polí: ' + result.updated + '.', 'success');
+          await load();
+          if (closeAfter) await closeModal();
+        } catch (err) {
+          setMessage('Uložení selhalo: ' + err.message, 'error');
+          updateDirtyState();
+        } finally {
+          setBusy(false);
+        }
+      }
+
+      async function closeModal() {
+        if (!sdkReady || !sdk) return;
+        try {
+          await sdk.execute('close_modal');
+        } catch (_) {
+          // Některé verze SDK zavření modalu nepodporují; uložená data zůstávají.
+        }
+      }
+
+      form.addEventListener('input', updateDirtyState);
+      form.addEventListener('change', updateDirtyState);
+      btnReload.addEventListener('click', load);
+      btnReset.addEventListener('click', function () {
+        if (lastPayload) render(lastPayload);
+      });
+      btnSave.addEventListener('click', function () { save(false); });
+      btnSaveClose.addEventListener('click', function () { save(true); });
+
+      (async function boot() {
+        await initSdk();
+        if (sdkReady) await load();
+      })();
+    })();
+  </script>
+</body>
+</html>
