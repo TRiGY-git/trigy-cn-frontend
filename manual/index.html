@@ -1097,7 +1097,12 @@
         method: 'PUT',
         body: JSON.stringify({ dealId: dealId, values: variables }),
       });
-      showMsg('Uloženo do Pipedrive. Aktualizováno polí: ' + data.updated + '.', 'success');
+      var skipped = (data && data.skipped) || [];
+      if (skipped.length) {
+        showMsg('Uloženo polí: ' + data.updated + '. Neuloženo (bez mapování): ' + skipped.join(', ') + '.', data.updated > 0 ? 'success' : 'error');
+      } else {
+        showMsg('Uloženo do Pipedrive. Aktualizováno polí: ' + data.updated + '.', 'success');
+      }
       setStatus('Uloženo.');
     } catch(err) {
       showMsg('Uložení do Pipedrive selhalo: ' + err.message, 'error');
