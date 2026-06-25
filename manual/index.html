@@ -230,6 +230,37 @@
     </div>
 
     <!-- ══════════════════════════════════════
+         1b. REALIZACE A DOPRAVA (společné)
+    ══════════════════════════════════════ -->
+    <div class="group">
+      <div class="group-head" onclick="toggleGroup(this)">
+        <h2><span class="icon">🚚</span> Realizace a doprava</h2>
+      </div>
+      <div class="group-body open">
+        <div class="frow">
+          <div class="flabel">
+            <label for="f_pocet_dni_realizace">Počet dní realizace</label>
+            <div class="hint">Práce party: 2 lidi × 10 000 Kč/den × počet dní.</div>
+            <div class="key">pocet_dni_realizace</div>
+          </div>
+          <div>
+            <input type="number" id="f_pocet_dni_realizace" name="pocet_dni_realizace" min="0" step="1" placeholder="počet dní">
+          </div>
+        </div>
+        <div class="frow">
+          <div class="flabel">
+            <label for="f_vzdalenost_km">Vzdálenost na místo (km)</label>
+            <div class="hint">Jednosměrně. Výjezd 2 000 (≤200 km) / 3 000 (&gt;200 km) + nafta km × 2 × 5,85.</div>
+            <div class="key">vzdalenost_km</div>
+          </div>
+          <div>
+            <input type="number" id="f_vzdalenost_km" name="vzdalenost_km" min="0" step="1" placeholder="km na místo">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
          2. ČOV
     ══════════════════════════════════════ -->
     <div class="group">
@@ -969,7 +1000,7 @@
   // ── Value collection ──────────────────────────────────────
   var NUM_NAMES = new Set([
     'vat_rate','marze_pct','sleva_pct','sleva_kc','dotace_kc',
-    'delka_potrubi','pocet_nadrzi',
+    'delka_potrubi','pocet_nadrzi','pocet_dni_realizace','vzdalenost_km',
     'plocha_vsaku_m2','objem_vsaku_m3','sterk_vsak_m3','objem_vykopu_vsak_m3','bagr_hod_vsak',
     'qty_cov_prislusenstvi','price_cov_prislusenstvi',
     'qty_nadrz_prislusenstvi','price_nadrz_prislusenstvi',
