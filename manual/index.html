@@ -1069,7 +1069,7 @@
     try {
       var data = await apiFetch('/quote/generate', {
         method: 'POST',
-        body: JSON.stringify({ dealId: dealId, variables: variables }),
+        body: JSON.stringify({ dealId: dealId, variables: variables, fromForm: true }),
       });
       resultNum.textContent = data.quoteNumber;
       resultTotal.textContent = fmtCzk(data.total) + ' s DPH';
