@@ -180,16 +180,6 @@
         </div>
         <div class="frow">
           <div class="flabel">
-            <label for="f_marze_pct">Přirážka / marže (%)</label>
-            <div class="hint">Výchozí je 30 %. Zadej jen při přepsání.</div>
-            <div class="key">marze_pct</div>
-          </div>
-          <div>
-            <input type="number" id="f_marze_pct" name="marze_pct" min="0" max="200" step="1" placeholder="výchozí 30">
-          </div>
-        </div>
-        <div class="frow">
-          <div class="flabel">
             <label for="f_sleva_pct">Sleva (%)</label>
             <div class="key">sleva_pct</div>
           </div>
@@ -1048,7 +1038,7 @@
 
   // ── Value collection ──────────────────────────────────────
   var NUM_NAMES = new Set([
-    'vat_rate','marze_pct','sleva_pct','sleva_kc','dotace_kc',
+    'vat_rate','sleva_pct','sleva_kc','dotace_kc',
     'delka_potrubi','pocet_nadrzi','pocet_dni_realizace','vzdalenost_km',
     'plocha_vsaku_m2','objem_vsaku_m3','sterk_vsak_m3','objem_vykopu_vsak_m3','bagr_hod_vsak',
     'qty_cov_prislusenstvi','price_cov_prislusenstvi',
