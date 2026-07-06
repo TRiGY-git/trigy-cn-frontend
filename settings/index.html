@@ -422,6 +422,29 @@
     .badge-none   { background: #f0f0f0; color: #999;    font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 10px; white-space: nowrap; display: inline-block; }
     .vypoctove-loading { font-size: 12px; color: #888; padding: 8px 0; }
 
+    /* ─── Režie a marže ──────────────────────────────── */
+    .rezie-card {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 7px;
+      padding: 16px;
+      max-width: 640px;
+    }
+    .rezie-grid { display: grid; grid-template-columns: repeat(2, minmax(180px, 1fr)); gap: 12px; }
+    .rezie-grid label { font-size: 12px; color: #555; display: grid; gap: 4px; font-weight: 600; }
+    .rezie-grid input {
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 7px 8px;
+      font: inherit;
+      font-size: 13px;
+    }
+    .rezie-grid input:focus { outline: none; border-color: #79489c; }
+    .rezie-note { font-size: 11px; color: #777; margin-top: 10px; line-height: 1.5; }
+    .rezie-actions { margin-top: 14px; }
+    .rezie-preview-wrap { max-width: 640px; margin-top: 20px; }
+    .rezie-preview-title { font-size: 13px; font-weight: 700; color: #333; margin-bottom: 8px; }
+
     /* ─── Footer ──────────────────────────────────── */
     footer {
       background: #fff;
@@ -446,6 +469,7 @@
       <button class="nav-item" data-section="cenik" type="button">1. Ceny v nabídce</button>
       <button class="nav-item" data-section="mapovani" type="button">2. Vstupy z Pipedrive</button>
       <button class="nav-item" data-section="vypoctove" type="button">3. Výpočet položek</button>
+      <button class="nav-item" data-section="rezie" type="button">4. Režie a marže</button>
     </nav>
 
     <main class="content">
@@ -526,6 +550,48 @@
             </thead>
             <tbody id="vypoctove-tbody"></tbody>
           </table>
+        </div>
+      </div>
+
+      <div class="section" id="section-rezie">
+        <h2>Režie a marže</h2>
+        <div id="rezie-banner" class="toast toast-warn" style="display:none;margin-bottom:10px;">
+          Mimo Pipedrive — admin funkce nedostupné
+        </div>
+        <p class="section-lead">Globální hodnoty pro nákladové vrstvy. Engine je použije u KAŽDÉ nově generované nabídky: <code>práce = sazba/den × dny</code>, <code>režie = základ + sazba/den × dny</code>, <code>prodejní cena = plný náklad ÷ (1 − marže)</code>. Dny = pole „Počet dní realizace" na dealu/formuláři.</p>
+        <div id="rezie-loading" class="cenik-loading" style="display:none;">Načítám nastavení…</div>
+        <form id="rezie-form" class="rezie-card" novalidate>
+          <div class="rezie-grid">
+            <label>Základ režie (Kč / zakázku)
+              <input id="rezie-zaklad" type="number" min="0" step="100" required>
+            </label>
+            <label>Režie — sazba / den (Kč)
+              <input id="rezie-sazba-den" type="number" min="0" step="100" required>
+            </label>
+            <label>Práce party — sazba / den (Kč)
+              <input id="praca-sazba-den" type="number" min="0" step="100" required>
+            </label>
+            <label>Výchozí marže (%)
+              <input id="rezie-marze" type="number" min="0" max="99" step="0.5" required>
+            </label>
+          </div>
+          <p class="rezie-note">Základ se počítá jednou na zakázku bez ohledu na počet dní — nerozpouští se s objemem. Sazby/den rostou s náročností (počtem dní realizace). Marži lze pro konkrétní nabídku přebít polem <code>marze_pct</code>, jinak platí výchozí hodnota odsud.</p>
+          <div class="rezie-actions">
+            <button class="btn btn-primary" type="submit">Uložit nastavení</button>
+          </div>
+        </form>
+        <div id="rezie-toast" class="toast"></div>
+
+        <div class="rezie-preview-wrap">
+          <div class="rezie-preview-title">Náhled výpočtu podle počtu dní</div>
+          <div class="cenik-table-wrap">
+            <table class="cenik-table" id="rezie-preview-table">
+              <thead>
+                <tr><th>Dní realizace</th><th>Práce</th><th>Režie</th><th>Práce + režie</th></tr>
+              </thead>
+              <tbody id="rezie-preview-tbody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -645,16 +711,18 @@
           _sdk = await new AppExtensionsSDK().initialize();
           window.cnSetReadiness('pipedrive', { label: 'Připojeno', tone: 'ready' },
             'Přístup k administraci je ověřen přes Pipedrive.');
-          // Share SDK with ceník + výpočtové položky modules
+          // Share SDK with ceník + výpočtové položky + režie modules
           if (window._cenikSetSdk) window._cenikSetSdk(_sdk, false);
           if (window._vypoctoveSetSdk) window._vypoctoveSetSdk(_sdk, false);
+          if (window._rezieSetSdk) window._rezieSetSdk(_sdk, false);
         } catch (e) {
           _outsidePipedrive = true;
           window.cnSetReadiness('pipedrive', { label: 'Nepřipojeno', tone: 'error' },
             'Otevřete tuto stránku v Pipedrive, aby bylo možné ověřit oprávnění.');
-          // Share outside-Pipedrive state with ceník + výpočtové položky modules
+          // Share outside-Pipedrive state with ceník + výpočtové položky + režie modules
           if (window._cenikSetSdk) window._cenikSetSdk(null, true);
           if (window._vypoctoveSetSdk) window._vypoctoveSetSdk(null, true);
+          if (window._rezieSetSdk) window._rezieSetSdk(null, true);
           console.error('[CN settings] SDK init selhal:', e);
           const banner = document.getElementById('mapovani-banner');
           banner.style.display = 'block';
@@ -1431,6 +1499,158 @@
         });
       });
 
+    })();
+  </script>
+  <script>
+    /* ═══════════════════════════════════════════════════════════════════════
+       Režie a marže — globální hodnoty pricing_layers (základ/sazba/marže)
+       ═══════════════════════════════════════════════════════════════════════ */
+    (function () {
+      'use strict';
+
+      var _rezieLoaded = false;
+      var _rzApiBase = 'https://dvcxqjlbyajqnkylmdya.supabase.co/functions/v1/api';
+      var _rzSdk = null;
+      var _rzOutside = false;
+
+      // Piggyback on the same SDK instance via shared global
+      window._rezieSetSdk = function (sdk, outside) {
+        _rzSdk = sdk;
+        _rzOutside = outside;
+      };
+
+      async function rzGetToken() {
+        if (_rzOutside || !_rzSdk) throw new Error('outside Pipedrive');
+        var CommandKey = (typeof AppExtensionsSDK !== 'undefined' && AppExtensionsSDK.Command)
+          ? AppExtensionsSDK.Command.GET_SIGNED_TOKEN : 'get_signed_token';
+        var result = await _rzSdk.execute(CommandKey);
+        return result.token;
+      }
+
+      async function rzApiFetch(path, options) {
+        var token = await rzGetToken();
+        var res = await fetch(_rzApiBase + path, Object.assign({
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        }, options || {}));
+        return res.json();
+      }
+
+      function showRzToast(msg, type) {
+        var el = document.getElementById('rezie-toast');
+        el.textContent = msg;
+        el.className = 'toast show toast-' + type;
+        setTimeout(function () { el.classList.remove('show'); }, 5000);
+      }
+
+      function fmtKc(n) {
+        return Math.round(n).toLocaleString('cs-CZ') + ' Kč';
+      }
+
+      // ── Live preview (pure client-side arithmetic, mirrors pricingLayers.ts) ─
+      function currentValues() {
+        return {
+          rezieZaklad: Number(document.getElementById('rezie-zaklad').value) || 0,
+          rezieSazbaDen: Number(document.getElementById('rezie-sazba-den').value) || 0,
+          pracaSazbaDen: Number(document.getElementById('praca-sazba-den').value) || 0,
+        };
+      }
+
+      function renderPreview() {
+        var v = currentValues();
+        var tbody = document.getElementById('rezie-preview-tbody');
+        tbody.innerHTML = '';
+        [1, 2, 3].forEach(function (dny) {
+          var prace = Math.round(v.pracaSazbaDen * dny);
+          var rezie = Math.round(v.rezieZaklad + v.rezieSazbaDen * dny);
+          var tr = document.createElement('tr');
+          tr.innerHTML =
+            '<td>' + dny + '</td>' +
+            '<td class="cenik-price">' + fmtKc(prace) + '</td>' +
+            '<td class="cenik-price">' + fmtKc(rezie) + '</td>' +
+            '<td class="cenik-price"><strong>' + fmtKc(prace + rezie) + '</strong></td>';
+          tbody.appendChild(tr);
+        });
+      }
+
+      // ── Load + save ────────────────────────────────────────────────────────
+      async function loadRezie() {
+        if (_rzOutside) {
+          document.getElementById('rezie-banner').style.display = 'block';
+          return;
+        }
+        var loading = document.getElementById('rezie-loading');
+        loading.style.display = 'block';
+        try {
+          var res = await rzApiFetch('/admin/pricing-config');
+          if (!res.ok) throw new Error(res.error || 'Chyba při načítání nastavení');
+          var row = (res.config || []).find(function (r) { return r.key === 'pricing_layers'; });
+          var val = row ? row.value : {};
+          document.getElementById('rezie-zaklad').value = val.rezie_zaklad ?? 0;
+          document.getElementById('rezie-sazba-den').value = val.rezie_sazba_den ?? 0;
+          document.getElementById('praca-sazba-den').value = val.praca_sazba_den ?? 0;
+          document.getElementById('rezie-marze').value = Math.round((val.marze_default ?? 0) * 1000) / 10;
+          renderPreview();
+        } catch (err) {
+          showRzToast('Chyba: ' + err.message, 'error');
+        } finally {
+          loading.style.display = 'none';
+        }
+      }
+
+      async function saveRezie(event) {
+        event.preventDefault();
+        if (_rzOutside) return;
+
+        var zaklad = Number(document.getElementById('rezie-zaklad').value);
+        var sazbaRezie = Number(document.getElementById('rezie-sazba-den').value);
+        var sazbaPrace = Number(document.getElementById('praca-sazba-den').value);
+        var marzePct = Number(document.getElementById('rezie-marze').value);
+
+        if (!Number.isFinite(zaklad) || zaklad < 0 ||
+            !Number.isFinite(sazbaRezie) || sazbaRezie < 0 ||
+            !Number.isFinite(sazbaPrace) || sazbaPrace < 0) {
+          showRzToast('Základ a sazby/den musí být nezáporná čísla.', 'error');
+          return;
+        }
+        if (!Number.isFinite(marzePct) || marzePct < 0 || marzePct > 99) {
+          showRzToast('Marže musí být v rozsahu 0–99 %.', 'error');
+          return;
+        }
+
+        try {
+          var res = await rzApiFetch('/admin/pricing-config/pricing_layers', {
+            method: 'PUT',
+            body: JSON.stringify({
+              rezie_zaklad: zaklad,
+              rezie_sazba_den: sazbaRezie,
+              praca_sazba_den: sazbaPrace,
+              marze_default: marzePct / 100,
+            }),
+          });
+          if (!res.ok) throw new Error(res.error ? JSON.stringify(res.error) : 'Uložení selhalo');
+          showRzToast('Nastavení uloženo — platí pro nově generované nabídky.', 'success');
+        } catch (err) {
+          showRzToast('Chyba ukládání: ' + err.message, 'error');
+        }
+      }
+
+      // ── Event wiring ──────────────────────────────────────────────────────
+      ['rezie-zaklad', 'rezie-sazba-den', 'praca-sazba-den', 'rezie-marze'].forEach(function (id) {
+        document.getElementById(id).addEventListener('input', renderPreview);
+      });
+      document.getElementById('rezie-form').addEventListener('submit', saveRezie);
+
+      // Lazy-load on first open
+      document.querySelectorAll('.nav-item').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          if (btn.dataset.section === 'rezie' && !_rezieLoaded) {
+            _rezieLoaded = true;
+            loadRezie();
+          }
+        });
+      });
+
+      renderPreview(); // hodnoty 0 dokud se nenačte skutečná konfigurace
     })();
   </script>
 
