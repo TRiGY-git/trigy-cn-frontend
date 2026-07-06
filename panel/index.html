@@ -135,6 +135,7 @@
       text-align: left;
       padding: 4px 6px;
       border-bottom: 1px solid #e0d6ec;
+      white-space: nowrap;
     }
     #cn-history tbody tr:nth-child(even) {
       background: #faf8fc;
@@ -143,6 +144,7 @@
       padding: 4px 6px;
       color: #333;
       vertical-align: middle;
+      white-space: nowrap;
     }
     #cn-history tbody td:first-child {
       font-weight: 700;
@@ -168,17 +170,21 @@
   <!-- CN history list -->
   <div id="cn-history">
     <h3>Vygenerované CN</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Číslo CN</th>
-          <th>Celkem</th>
-          <th>Marže</th>
-          <th>Datum</th>
-        </tr>
-      </thead>
-      <tbody id="cn-history-body"></tbody>
-    </table>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Číslo CN</th>
+            <th>Celkem</th>
+            <th>Náklady</th>
+            <th>Marže</th>
+            <th>Režie</th>
+            <th>Datum</th>
+          </tr>
+        </thead>
+        <tbody id="cn-history-body"></tbody>
+      </table>
+    </div>
     <div class="cn-overflow" id="cn-overflow" style="display:none"></div>
   </div>
 
@@ -278,7 +284,9 @@
               return '<tr>' +
                 '<td>' + q.quoteNumber + '</td>' +
                 '<td>' + formatTotal(q.total) + '</td>' +
+                '<td>' + formatMargin(q.cost) + '</td>' +
                 '<td>' + formatMargin(q.margin) + '</td>' +
+                '<td>' + formatMargin(q.rezie) + '</td>' +
                 '<td>' + formatDate(q.createdAt) + '</td>' +
                 '</tr>';
             }).join('');
