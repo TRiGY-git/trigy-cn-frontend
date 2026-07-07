@@ -936,12 +936,24 @@
       <a href="#" id="result-link" class="result-link" target="_blank">📄 Stáhnout PDF →</a>
     </div>
 
+    <!-- Debug rozpis (shown instead of result-card when debug mode je zapnutý) -->
+    <div class="result-card" id="debug-card" style="display:none; text-align:left;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+        <strong>Debug rozpis (CN NEBYLA vytvořena)</strong>
+        <a href="#" id="debug-download" download="debug-rozpis.txt">💾 Stáhnout .txt</a>
+      </div>
+      <pre id="debug-text" style="white-space:pre-wrap; font-family:ui-monospace,Consolas,monospace; font-size:11px; max-height:420px; overflow:auto; margin:0;"></pre>
+    </div>
+
   </form>
 </main>
 
 <div class="controls">
   <div class="status-text" id="status-text">Připraveno.</div>
   <div class="actions">
+    <label style="display:flex; align-items:center; gap:4px; font-size:12px; font-weight:normal;" title="Spočítá nabídku a vrátí plochý rozpis položek (i skrytých) bez vytvoření reálné CN.">
+      <input type="checkbox" id="chk-debug"> Debug
+    </label>
     <button class="btn-secondary" id="btn-save-pd" type="button" title="Uložit hodnoty do Pipedrive custom fields (vyžaduje mapování)">Uložit do Pipedrive</button>
     <button class="btn-primary" id="btn-generate" type="button">⚡ Generovat CN</button>
   </div>
@@ -973,6 +985,10 @@
   var resultNum  = document.getElementById('result-num');
   var resultTotal= document.getElementById('result-total');
   var resultLink = document.getElementById('result-link');
+  var debugCard     = document.getElementById('debug-card');
+  var debugText     = document.getElementById('debug-text');
+  var debugDownload = document.getElementById('debug-download');
+  var chkDebug       = document.getElementById('chk-debug');
 
   // ── Helpers ───────────────────────────────────────────────
   function parseDealId() {
@@ -1161,23 +1177,36 @@
     }
     document.getElementById('f_vat_rate').classList.remove('req-missing');
 
+    var isDebug = chkDebug && chkDebug.checked;
+
     btnGen.disabled = true;
-    btnGen.textContent = '⏳ Generuji…';
+    btnGen.textContent = isDebug ? '⏳ Počítám…' : '⏳ Generuji…';
     showMsg('');
     resultCard.classList.remove('show');
-    setStatus('Generuji CN…');
+    debugCard.style.display = 'none';
+    setStatus(isDebug ? 'Počítám rozpis…' : 'Generuji CN…');
 
     try {
       var data = await apiFetch('/quote/generate', {
         method: 'POST',
-        body: JSON.stringify({ dealId: dealId, variables: variables, fromForm: true }),
+        body: JSON.stringify({ dealId: dealId, variables: variables, fromForm: true, debug: !!isDebug }),
       });
-      resultNum.textContent = data.quoteNumber;
-      resultTotal.textContent = fmtCzk(data.total) + ' s DPH';
-      resultLink.href = data.fileUrl || '#';
-      resultCard.classList.add('show');
-      showMsg('CN ' + data.quoteNumber + ' vygenerována!', 'success');
-      setStatus('Hotovo: ' + data.quoteNumber);
+      if (isDebug) {
+        debugText.textContent = data.breakdown;
+        var blob = new Blob([data.breakdown], { type: 'text/plain' });
+        debugDownload.href = URL.createObjectURL(blob);
+        debugCard.style.display = 'block';
+        var issueCount = (data.issues || []).length;
+        showMsg('Rozpis vygenerován' + (issueCount ? ' (' + issueCount + ' issues)' : '') + ' — CN nebyla vytvořena.', issueCount ? 'error' : 'success');
+        setStatus('Debug hotovo.');
+      } else {
+        resultNum.textContent = data.quoteNumber;
+        resultTotal.textContent = fmtCzk(data.total) + ' s DPH';
+        resultLink.href = data.fileUrl || '#';
+        resultCard.classList.add('show');
+        showMsg('CN ' + data.quoteNumber + ' vygenerována!', 'success');
+        setStatus('Hotovo: ' + data.quoteNumber);
+      }
     } catch(err) {
       showMsg('Generování selhalo: ' + err.message, 'error');
       setStatus('Chyba.');
