@@ -919,9 +919,11 @@
           const transformKind = tdTransform.querySelector('select').value;
           const pipedriveFieldKey = tdField.querySelector('select').value;
 
-          if (!internalKey) { valid = false; showToast('Interní klíč nesmí být prázdný', 'error'); return; }
+          // Řádek zatím nemá vybrané Pipedrive pole (rozpracovaný/nenalinkovaný) —
+          // přeskočit beze zápisu, neblokovat uložení ostatních (už nalinkovaných) řádků.
+          if (!pipedriveFieldKey) return;
+          if (!internalKey) { valid = false; showToast('Interní klíč nesmí být prázdný (řádek s vybraným Pipedrive polem)', 'error'); return; }
           if (!/^[a-z0-9_]+$/.test(internalKey)) { valid = false; showToast('Interní klíč musí být [a-z0-9_]+', 'error'); return; }
-          if (!pipedriveFieldKey) { valid = false; showToast('Vyberte Pipedrive pole pro každý řádek', 'error'); return; }
 
           const transform = { kind: transformKind };
           // Collect enumMap from sub-table if present

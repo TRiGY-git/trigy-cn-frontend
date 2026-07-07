@@ -638,18 +638,19 @@
                 <option value="">— bez vsaku —</option>
                 <option value="VSAK-TUNEL-MANUAL">Vsakovací tunely PP</option>
                 <option value="VSAK-BLOK-MANUAL">Vsakovací bloky (EcoBloc)</option>
+                <option value="VSAK-STERKOVA-JAMA">Vsakovací jáma (klasický štěrkový vsak, bez tělesa)</option>
               </select>
             </div>
-            <div class="compound-sub">
+            <div class="compound-sub" id="vsak_tunel_qty_wrap">
               <label>Počet kusů <span class="key" style="display:inline">qty_vsak_tunel</span></label>
               <input type="number" name="qty_vsak_tunel" min="1" step="1" placeholder="ks">
             </div>
-            <div class="compound-sub">
+            <div class="compound-sub" id="vsak_tunel_price_wrap">
               <label>Cena / ks bez DPH <span class="key" style="display:inline">price_vsak_tunel</span></label>
               <input type="number" name="price_vsak_tunel" min="0" step="100" placeholder="Kč">
             </div>
           </div>
-          <div class="hint">Ruční cena — katalogová cena je 0. Počet kusů je povinný.</div>
+          <div class="hint" id="vsak_tunel_hint">Ruční cena — katalogová cena je 0. Počet kusů je povinný.</div>
         </div>
 
         <!-- Vsak rozměry -->
@@ -865,19 +866,7 @@
         <h2><span class="icon">📋</span> Obchodní položky</h2>
       </div>
       <div class="group-body">
-        <div class="frow">
-          <div class="flabel">
-            <label for="f_obchod_prohlidka">Technická prohlídka</label>
-            <div class="hint">Fixní cena 5 000 Kč z katalogu.</div>
-            <div class="key">item_obchod_prohlidka</div>
-          </div>
-          <div>
-            <select id="f_obchod_prohlidka" name="item_obchod_prohlidka">
-              <option value="">— ne —</option>
-              <option value="OBCHOD-TECHNICKA-PROHLIDKA">Ano — technická prohlídka</option>
-            </select>
-          </div>
-        </div>
+        <div class="hint" style="margin-bottom:12px;">Technická prohlídka (5 000 Kč) se počítá automaticky u každé realizace hlavního zařízení (ČOV/nádrž/septik) — není třeba ji zde vybírat.</div>
         <div class="compound">
           <label>Hydrogeologický posudek (HGI)</label>
           <div class="compound-row no-price">
@@ -925,6 +914,26 @@
               <input type="number" name="price_obchod_admin" min="0" step="500" placeholder="Kč">
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         9. ROZDĚLENÍ REŽIE
+    ══════════════════════════════════════ -->
+    <div class="group" id="group-rezie-split">
+      <div class="group-head" onclick="toggleGroup(this)">
+        <h2><span class="icon">📊</span> Rozdělení režie</h2>
+      </div>
+      <div class="group-body">
+        <div class="hint" style="margin-bottom:12px;">
+          Volitelné. Nevyplněno → celá režie zakázky jde na primární produkt (jako dřív).
+          Vyplněno → musí dát dohromady přesně 100 %, jinak CN nepůjde vygenerovat.
+          Řádky níže se zobrazují podle toho, co je vybrané výše ve formuláři.
+        </div>
+        <div id="rezie-split-rows"></div>
+        <div style="margin-top:8px; font-weight:600;">
+          Součet: <span id="rezie-split-sum">0</span> % <span id="rezie-split-status"></span>
         </div>
       </div>
     </div>
@@ -1045,8 +1054,14 @@
   };
 
   window.onVsakItemChange = function() {
-    var hasVsak = !!form.querySelector('[name="item_vsak_tunel"]').value;
-    document.getElementById('vsak_rozmery').style.display = hasVsak ? '' : 'none';
+    var vsakVal = form.querySelector('[name="item_vsak_tunel"]').value;
+    document.getElementById('vsak_rozmery').style.display = vsakVal ? '' : 'none';
+    // Vsakovací jáma nemá žádné vsakovací těleso ke koupi — počet kusů/cena
+    // se pro ni nepoužívají (a nejsou vyžadované).
+    var isGravelPit = vsakVal === 'VSAK-STERKOVA-JAMA';
+    document.getElementById('vsak_tunel_qty_wrap').style.display = isGravelPit ? 'none' : '';
+    document.getElementById('vsak_tunel_price_wrap').style.display = isGravelPit ? 'none' : '';
+    document.getElementById('vsak_tunel_hint').style.display = isGravelPit ? 'none' : '';
     saveToLocalStorage();
   };
 
@@ -1078,6 +1093,16 @@
       onCovChange();
       onNadrzChange();
       onVsakItemChange();
+      // rezie_podil_* řádky vznikají až tady (refreshRezieSplitRows čte typ_cov
+      // atd. nastavené v průchodu výš) — proto se jejich hodnoty obnovují
+      // samostatně v 2. průchodu, teprve teď, co jejich <input> existují.
+      refreshRezieSplitRows();
+      for (var name2 in data) {
+        if (name2.indexOf('rezie_podil_') !== 0) continue;
+        var el2 = form.querySelector('[name="' + name2 + '"]');
+        if (el2) el2.value = data[name2] === null ? '' : String(data[name2]);
+      }
+      updateRezieSplitSum();
     } catch(_) {}
   }
 
@@ -1095,6 +1120,10 @@
     'qty_septik_filtr','price_septik_filtr',
     'qty_zemina_odvoz','qty_zemina_likvidace','qty_zemina_hutneni','qty_zemina_pruraz',
     'price_obchod_hgi','price_obchod_projekt','price_obchod_admin',
+    'rezie_podil_realizace_cov','rezie_podil_svody_cov','rezie_podil_prislusenstvi_cov',
+    'rezie_podil_realizace_nadrze','rezie_podil_svody_nadrz','rezie_podil_prislusenstvi_nadrze',
+    'rezie_podil_realizace_vsak','rezie_podil_septik','rezie_podil_svody_septik',
+    'rezie_podil_zemina','rezie_podil_obchodni_polozky',
   ]);
   var BOOL_NAMES = new Set([
     'okruh_wc','rozvody','kontrolni_zaver_vsak','potvrzeni_propojeni_nadrzi',
@@ -1125,6 +1154,109 @@
     if (vatEl && vatEl.value !== '') vars['vat_rate'] = parseFloat(vatEl.value);
 
     return vars;
+  }
+
+  // ── Rozdělení režie (rezie_podil_*) ────────────────────────
+  // Řádky se zobrazují dynamicky podle toho, co je jinde ve formuláři
+  // vyplněné — přibližná (ne 1:1) kopie applies() gate z pricing services;
+  // finální validaci (součet = 100 %) dělá vždy backend, tohle je jen UX.
+  function fieldVal(name) {
+    var el = form.querySelector('[name="' + name + '"]');
+    return el ? el.value.trim() : '';
+  }
+  function fieldNum(name) {
+    var n = parseFloat(fieldVal(name));
+    return isNaN(n) ? 0 : n;
+  }
+
+  var REZIE_SPLIT_TARGETS = [
+    { key: 'realizace_cov', label: 'ČOV — realizace',
+      active: function() { return !!fieldVal('typ_cov'); } },
+    { key: 'svody_cov', label: 'ČOV — svody a rozvody',
+      active: function() { return fieldNum('delka_svodu_cov') > 0 || fieldNum('delka_rozvodu_cov') > 0; } },
+    { key: 'prislusenstvi_cov', label: 'ČOV — příslušenství',
+      active: function() { return !!fieldVal('item_cov_prislusenstvi'); } },
+    { key: 'realizace_nadrze', label: 'Nádrž — realizace',
+      active: function() { return !!fieldVal('typ_nadrze'); } },
+    { key: 'svody_nadrz', label: 'Nádrž — svody a rozvody',
+      active: function() { return fieldNum('delka_svodu_nadrz') > 0 || fieldNum('delka_rozvodu_nadrz') > 0; } },
+    { key: 'prislusenstvi_nadrze', label: 'Nádrž — příslušenství',
+      active: function() { return !!fieldVal('item_nadrz_prislusenstvi') || !!fieldVal('item_nadrz_geiger'); } },
+    { key: 'realizace_vsak', label: 'Vsakovací systém',
+      active: function() {
+        return !!fieldVal('item_vsak_tunel') || fieldNum('plocha_vsaku_m2') > 0 || fieldNum('sterk_vsak_m3') > 0;
+      } },
+    { key: 'septik', label: 'Septik a filtrace',
+      active: function() { return !!fieldVal('item_septik_septik') || !!fieldVal('item_septik_filtr'); } },
+    { key: 'svody_septik', label: 'Septik — svody a rozvody',
+      active: function() { return fieldNum('delka_svodu_septik') > 0 || fieldNum('delka_rozvodu_septik') > 0; } },
+    { key: 'zemina', label: 'Zemní práce navíc',
+      active: function() {
+        return !!fieldVal('item_zemina_odvoz') || !!fieldVal('item_zemina_likvidace') ||
+          !!fieldVal('item_zemina_hutneni') || !!fieldVal('item_zemina_pruraz');
+      } },
+    { key: 'obchodni_polozky', label: 'Projektové a obchodní položky',
+      active: function() {
+        return !!fieldVal('item_obchod_hgi') || !!fieldVal('item_obchod_projekt') || !!fieldVal('item_obchod_admin');
+      } },
+  ];
+
+  function refreshRezieSplitRows() {
+    var container = document.getElementById('rezie-split-rows');
+    if (!container) return;
+    var activeKeys = REZIE_SPLIT_TARGETS.filter(function(t) { return t.active(); }).map(function(t) { return t.key; });
+
+    // Odeber řádky, jejichž kategorie už není aktivní.
+    Array.prototype.slice.call(container.querySelectorAll('[data-rezie-key]')).forEach(function(row) {
+      if (activeKeys.indexOf(row.getAttribute('data-rezie-key')) === -1) row.remove();
+    });
+
+    // Přidej řádky pro nově aktivní kategorie (zachovává už existující + jejich hodnoty).
+    activeKeys.forEach(function(key) {
+      if (container.querySelector('[data-rezie-key="' + key + '"]')) return;
+      var target = REZIE_SPLIT_TARGETS.filter(function(t) { return t.key === key; })[0];
+      var row = document.createElement('div');
+      row.className = 'frow';
+      row.setAttribute('data-rezie-key', key);
+      row.innerHTML =
+        '<div class="flabel"><label>' + target.label + '</label>' +
+        '<div class="key">rezie_podil_' + key + '</div></div>' +
+        '<div><input type="number" name="rezie_podil_' + key + '" min="0" max="100" step="1" placeholder="%"></div>';
+      container.appendChild(row);
+    });
+
+    updateRezieSplitSum();
+  }
+
+  function rezieSplitSum() {
+    var container = document.getElementById('rezie-split-rows');
+    if (!container) return { sum: 0, anyFilled: false };
+    var inputs = container.querySelectorAll('input[name^="rezie_podil_"]');
+    var sum = 0;
+    var anyFilled = false;
+    Array.prototype.forEach.call(inputs, function(inp) {
+      var n = parseFloat(inp.value);
+      if (inp.value.trim() !== '' && !isNaN(n)) { sum += n; anyFilled = true; }
+    });
+    return { sum: sum, anyFilled: anyFilled };
+  }
+
+  function updateRezieSplitSum() {
+    var sumEl = document.getElementById('rezie-split-sum');
+    var statusEl = document.getElementById('rezie-split-status');
+    if (!sumEl || !statusEl) return;
+    var r = rezieSplitSum();
+    sumEl.textContent = String(r.sum);
+    if (!r.anyFilled) {
+      statusEl.textContent = '(nevyplněno → celá režie na primární produkt)';
+      statusEl.style.color = '#777';
+    } else if (Math.abs(r.sum - 100) < 0.01) {
+      statusEl.textContent = '✓ OK';
+      statusEl.style.color = 'green';
+    } else {
+      statusEl.textContent = '✗ musí dát dohromady přesně 100 %';
+      statusEl.style.color = '#c0392b';
+    }
   }
 
   // ── SDK & auth ────────────────────────────────────────────
@@ -1176,6 +1308,12 @@
       return;
     }
     document.getElementById('f_vat_rate').classList.remove('req-missing');
+
+    var rezieSum = rezieSplitSum();
+    if (rezieSum.anyFilled && Math.abs(rezieSum.sum - 100) > 0.01) {
+      showMsg('Rozdělení režie musí dát dohromady přesně 100 % (teď: ' + rezieSum.sum + ' %).', 'error');
+      return;
+    }
 
     var isDebug = chkDebug && chkDebug.checked;
 
@@ -1276,15 +1414,21 @@
   btnReload.addEventListener('click', function() {
     restoreFromLocalStorage();
     loadDealTitle();
+    refreshRezieSplitRows();
     showMsg('Hodnoty obnoveny z uložených dat.', '');
   });
-  form.addEventListener('change', saveToLocalStorage);
+  form.addEventListener('change', function() {
+    saveToLocalStorage();
+    refreshRezieSplitRows();
+  });
+  document.getElementById('rezie-split-rows').addEventListener('input', updateRezieSplitSum);
 
   // ── Boot ──────────────────────────────────────────────────
   (async function boot() {
     dealId = parseDealId();
     await initSdk();
     restoreFromLocalStorage();
+    refreshRezieSplitRows();
     await loadDealTitle();
     setStatus('Připraveno. Deal #' + (dealId || '?'));
   })();
