@@ -422,6 +422,27 @@
           </div>
           <div class="hint">Pumpa, UV lampa, manostat, záložní vzduchování apod.</div>
         </div>
+
+        <div class="frow">
+          <div class="flabel">
+            <label for="f_delka_svodu_cov">Délka svodu ČOV (m)</label>
+            <div class="hint">Přípojka od domu k ČOV.</div>
+            <div class="key">delka_svodu_cov</div>
+          </div>
+          <div>
+            <input type="number" id="f_delka_svodu_cov" name="delka_svodu_cov" min="0" step="1" placeholder="0">
+          </div>
+        </div>
+        <div class="frow">
+          <div class="flabel">
+            <label for="f_delka_rozvodu_cov">Délka rozvodu ČOV (m)</label>
+            <div class="hint">Rozvod od ČOV dál (vsak/vyústění).</div>
+            <div class="key">delka_rozvodu_cov</div>
+          </div>
+          <div>
+            <input type="number" id="f_delka_rozvodu_cov" name="delka_rozvodu_cov" min="0" step="1" placeholder="0">
+          </div>
+        </div>
       </div>
     </div>
 
@@ -574,38 +595,25 @@
           </div>
           <div class="hint">Cena z ceníku; účtuje se jen při výběru typu. Počet = kolik prosvodů.</div>
         </div>
-      </div>
-    </div>
 
-    <!-- ══════════════════════════════════════
-         4. SVODY A ROZVODY
-    ══════════════════════════════════════ -->
-    <div class="group">
-      <div class="group-head" onclick="toggleGroup(this)">
-        <h2><span class="icon">📐</span> Svody a Rozvody KG</h2>
-      </div>
-      <div class="group-body">
         <div class="frow">
           <div class="flabel">
-            <label for="f_delka_potrubi">Délka potrubí (m)</label>
-            <div class="hint">Celková délka svodů KG. Engine automaticky dopočítá mix DN110/125/160, tvarovky, bagr a štěrk.</div>
-            <div class="key">delka_potrubi</div>
+            <label for="f_delka_svodu_nadrz">Délka svodu nádrž (m)</label>
+            <div class="hint">Přípojka od domu k nádrži.</div>
+            <div class="key">delka_svodu_nadrz</div>
           </div>
           <div>
-            <input type="number" id="f_delka_potrubi" name="delka_potrubi" min="0" step="1" placeholder="0">
+            <input type="number" id="f_delka_svodu_nadrz" name="delka_svodu_nadrz" min="0" step="1" placeholder="0">
           </div>
         </div>
         <div class="frow">
           <div class="flabel">
-            <label for="f_rozvody">Vnitřní rozvody</label>
-            <div class="hint">Přidá rozvody uvnitř objektu.</div>
-            <div class="key">rozvody</div>
+            <label for="f_delka_rozvodu_nadrz">Délka rozvodu nádrž (m)</label>
+            <div class="hint">Rozvod od nádrže dál (vsak/vyústění).</div>
+            <div class="key">delka_rozvodu_nadrz</div>
           </div>
           <div>
-            <select id="f_rozvody" name="rozvody">
-              <option value="">— ne —</option>
-              <option value="true">Ano</option>
-            </select>
+            <input type="number" id="f_delka_rozvodu_nadrz" name="delka_rozvodu_nadrz" min="0" step="1" placeholder="0">
           </div>
         </div>
       </div>
@@ -748,6 +756,27 @@
               <label>Cena bez DPH <span class="key" style="display:inline">price_septik_filtr</span></label>
               <input type="number" name="price_septik_filtr" min="0" step="100" placeholder="Kč">
             </div>
+          </div>
+        </div>
+
+        <div class="frow">
+          <div class="flabel">
+            <label for="f_delka_svodu_septik">Délka svodu septik (m)</label>
+            <div class="hint">Přípojka od domu k septiku.</div>
+            <div class="key">delka_svodu_septik</div>
+          </div>
+          <div>
+            <input type="number" id="f_delka_svodu_septik" name="delka_svodu_septik" min="0" step="1" placeholder="0">
+          </div>
+        </div>
+        <div class="frow">
+          <div class="flabel">
+            <label for="f_delka_rozvodu_septik">Délka rozvodu septik (m)</label>
+            <div class="hint">Rozvod od septiku dál (filtr/vsak/vyústění).</div>
+            <div class="key">delka_rozvodu_septik</div>
+          </div>
+          <div>
+            <input type="number" id="f_delka_rozvodu_septik" name="delka_rozvodu_septik" min="0" step="1" placeholder="0">
           </div>
         </div>
       </div>
@@ -1039,7 +1068,9 @@
   // ── Value collection ──────────────────────────────────────
   var NUM_NAMES = new Set([
     'vat_rate','sleva_pct','sleva_kc','dotace_kc',
-    'delka_potrubi','pocet_nadrzi','pocet_dni_realizace','vzdalenost_km',
+    'delka_svodu_cov','delka_rozvodu_cov','delka_svodu_nadrz','delka_rozvodu_nadrz',
+    'delka_svodu_septik','delka_rozvodu_septik',
+    'pocet_nadrzi','pocet_dni_realizace','vzdalenost_km',
     'plocha_vsaku_m2','objem_vsaku_m3','sterk_vsak_m3','objem_vykopu_vsak_m3','bagr_hod_vsak',
     'qty_cov_prislusenstvi','price_cov_prislusenstvi',
     'qty_nadrz_prislusenstvi','price_nadrz_prislusenstvi','qty_nadrz_geiger',
