@@ -683,9 +683,60 @@
           <div class="compound-row with-confirm">
             <div class="compound-sub">
               <label>Typ položky</label>
-              <select name="item_nadrz_prislusenstvi" onchange="onCompoundItem(this,'nadrz_prislusenstvi')">
+              <select name="item_nadrz_prislusenstvi" onchange="onNadrzPrislusenstviChange(this)">
                 <option value="">— bez příslušenství —</option>
-                <option value="NADRZ-PRISLUSENSTVI-MANUAL">Příslušenství nádrže – dle návrhu</option>
+                <optgroup label="Atlantis / Clearo / Eco-line / Globo-line / Ozeanis" data-nadrz-group="ATL">
+                  <option value="NADRZ-SADA-2822-ATL" data-nadrz-group="ATL">Ekonomická sada - malá zahrada a přenosné čerpadlo — 5 800 Kč</option>
+                  <option value="NADRZ-SADA-2825-ATL" data-nadrz-group="ATL">Sada komfort - velká zahrada a automatické čerpadlo — 7 300 Kč</option>
+                  <option value="NADRZ-SADA-2828-ATL" data-nadrz-group="ATL">Sada prémium - velká zahrada a silné čerpadlo — 11 900 Kč</option>
+                  <option value="NADRZ-SADA-2831-ATL" data-nadrz-group="ATL">Sada superprémium - velká zahrada a silné čerpadlo — 22 500 Kč</option>
+                  <option value="NADRZ-SADA-2834-ATL" data-nadrz-group="ATL">Ekonomická sada - základní vybavení — 14 100 Kč</option>
+                  <option value="NADRZ-SADA-2837-ATL" data-nadrz-group="ATL">Sada classic - automatizovaná — 24 900 Kč</option>
+                  <option value="NADRZ-SADA-2840-ATL" data-nadrz-group="ATL">Automatická sada do domu - všechna technologie v domě — 26 700 Kč</option>
+                  <option value="NADRZ-SADA-2843-ATL" data-nadrz-group="ATL">Sada prémium - úsporné i pro automatickou závlahu — 38 200 Kč</option>
+                  <option value="NADRZ-SADA-2846-ATL" data-nadrz-group="ATL">Energeticky úsporná sada - pro pasivní, nulové a nízkoenergetické domy — 28 800 Kč</option>
+                  <option value="NADRZ-SADA-4866-ATL" data-nadrz-group="ATL">Automatická sada do domu prémium - všechna technologie v domě — 37 900 Kč</option>
+                  <option value="NADRZ-SADA-4869-ATL" data-nadrz-group="ATL">Automatická sada do domu superprémium - všechna technologie v domě — 52 500 Kč</option>
+                  <option value="NADRZ-SADA-4920-ATL" data-nadrz-group="ATL">Sada basic - malá zahrada a automatické čerpadlo — 6 800 Kč</option>
+                  <option value="NADRZ-SADA-5094-ATL" data-nadrz-group="ATL">Sada Leo - velká zahrada a automatické čerpadlo — 8 800 Kč</option>
+                </optgroup>
+                <optgroup label="Aqua / Columbus / Cristall / Modularis" data-nadrz-group="AQU">
+                  <option value="NADRZ-SADA-2822-AQU" data-nadrz-group="AQU">Ekonomická sada - malá zahrada a přenosné čerpadlo — 6 300 Kč</option>
+                  <option value="NADRZ-SADA-2825-AQU" data-nadrz-group="AQU">Sada komfort - velká zahrada a automatické čerpadlo — 7 800 Kč</option>
+                  <option value="NADRZ-SADA-2828-AQU" data-nadrz-group="AQU">Sada prémium - velká zahrada a silné čerpadlo — 12 400 Kč</option>
+                  <option value="NADRZ-SADA-2831-AQU" data-nadrz-group="AQU">Sada superprémium - velká zahrada a silné čerpadlo — 23 000 Kč</option>
+                  <option value="NADRZ-SADA-2834-AQU" data-nadrz-group="AQU">Ekonomická sada - základní vybavení — 14 600 Kč</option>
+                  <option value="NADRZ-SADA-2837-AQU" data-nadrz-group="AQU">Sada classic - automatizovaná — 25 416 Kč</option>
+                  <option value="NADRZ-SADA-2840-AQU" data-nadrz-group="AQU">Automatická sada do domu - všechna technologie v domě — 27 200 Kč</option>
+                  <option value="NADRZ-SADA-2843-AQU" data-nadrz-group="AQU">Sada prémium - úsporné i pro automatickou závlahu — 38 700 Kč</option>
+                  <option value="NADRZ-SADA-2846-AQU" data-nadrz-group="AQU">Energeticky úsporná sada - pro pasivní, nulové a nízkoenergetické domy — 29 300 Kč</option>
+                  <option value="NADRZ-SADA-4866-AQU" data-nadrz-group="AQU">Automatická sada do domu prémium - všechna technologie v domě — 38 400 Kč</option>
+                  <option value="NADRZ-SADA-4869-AQU" data-nadrz-group="AQU">Automatická sada do domu superprémium - všechna technologie v domě — 53 000 Kč</option>
+                  <option value="NADRZ-SADA-4920-AQU" data-nadrz-group="AQU">Sada basic - malá zahrada a automatické čerpadlo — 7 300 Kč</option>
+                  <option value="NADRZ-SADA-5094-AQU" data-nadrz-group="AQU">Sada Leo - velká zahrada a automatické čerpadlo — 9 300 Kč</option>
+                </optgroup>
+                <optgroup label="Li-Lo" data-nadrz-group="LI">
+                  <option value="NADRZ-SADA-2822-LI" data-nadrz-group="LI">Ekonomická sada - malá zahrada a přenosné čerpadlo — 6 200 Kč</option>
+                  <option value="NADRZ-SADA-2828-LI" data-nadrz-group="LI">Sada prémium - velká zahrada a silné čerpadlo — 12 300 Kč</option>
+                  <option value="NADRZ-SADA-2831-LI" data-nadrz-group="LI">Sada superprémium - velká zahrada a silné čerpadlo — 22 900 Kč</option>
+                  <option value="NADRZ-SADA-4866-LI" data-nadrz-group="LI">Automatická sada do domu prémium - všechna technologie v domě — 39 100 Kč</option>
+                  <option value="NADRZ-SADA-4869-LI" data-nadrz-group="LI">Automatická sada do domu superprémium - všechna technologie v domě — 53 700 Kč</option>
+                  <option value="NADRZ-SADA-4920-LI" data-nadrz-group="LI">Sada basic - malá zahrada a automatické čerpadlo — 8 000 Kč</option>
+                  <option value="NADRZ-SADA-5094-LI" data-nadrz-group="LI">Sada Leo - velká zahrada a automatické čerpadlo — 10 000 Kč</option>
+                </optgroup>
+                <optgroup label="Filtrační šachta (napojení přes šachtu)" data-nadrz-group="FIL">
+                  <option value="NADRZ-SADA-2825-FIL" data-nadrz-group="FIL">Sada komfort - velká zahrada a automatické čerpadlo — 7 700 Kč</option>
+                  <option value="NADRZ-SADA-2834-FIL" data-nadrz-group="FIL">Ekonomická sada - základní vybavení — 14 500 Kč</option>
+                  <option value="NADRZ-SADA-2837-FIL" data-nadrz-group="FIL">Sada classic - automatizovaná — 25 300 Kč</option>
+                  <option value="NADRZ-SADA-2840-FIL" data-nadrz-group="FIL">Automatická sada do domu - všechna technologie v domě — 27 100 Kč</option>
+                  <option value="NADRZ-SADA-2843-FIL" data-nadrz-group="FIL">Sada prémium - úsporné i pro automatickou závlahu — 38 600 Kč</option>
+                  <option value="NADRZ-SADA-2846-FIL" data-nadrz-group="FIL">Energeticky úsporná sada - pro pasivní, nulové a nízkoenergetické domy — 29 200 Kč</option>
+                  <option value="NADRZ-SADA-4866-FIL" data-nadrz-group="FIL">Automatická sada do domu prémium - všechna technologie v domě — 38 300 Kč</option>
+                  <option value="NADRZ-SADA-4869-FIL" data-nadrz-group="FIL">Automatická sada do domu superprémium - všechna technologie v domě — 52 900 Kč</option>
+                  <option value="NADRZ-SADA-4920-FIL" data-nadrz-group="FIL">Sada basic - malá zahrada a automatické čerpadlo — 7 200 Kč</option>
+                  <option value="NADRZ-SADA-5094-FIL" data-nadrz-group="FIL">Sada Leo - velká zahrada a automatické čerpadlo — 9 199 Kč</option>
+                </optgroup>
+                <option value="NADRZ-PRISLUSENSTVI-MANUAL" data-manual="1">Jiné příslušenství – ruční cena</option>
               </select>
             </div>
             <div class="compound-sub">
@@ -1331,6 +1382,12 @@
       var sel = clone.querySelector('select[name^="item_cov_prislusenstvi"]');
       if (sel) onCovPrislusenstviChange(sel);
     }
+    // Nádrž: filtr sad dle rodiny nádrže + viditelnost ceny pro nový select
+    if (prefix === 'nadrz_prislusenstvi') {
+      filterNadrzAccessoryOptions();
+      var nsel = clone.querySelector('select[name^="item_nadrz_prislusenstvi"]');
+      if (nsel) onNadrzPrislusenstviChange(nsel);
+    }
     saveToLocalStorage();
     return clone;
   };
@@ -1339,6 +1396,55 @@
     var row = btn.closest('.accessory-row');
     if (row) row.remove();
     saveToLocalStorage();
+  };
+
+  // ── Nádrž: sady příslušenství dle rodiny nádrže ───────────────
+  // Rodina zvolené nádrže → skupina kompatibility sad (ATL/AQU/LI). FIL
+  // (napojení přes filtrační šachtu) se nabízí ke všem. Musí sedět s
+  // attrs.nadrz_sada_group v ceníku a s validací v tankAccessoryService.ts.
+  function nadrzSadaGroup(code) {
+    if (!code) return '';
+    if (/ATLANTIS|CLEARO|ECOLINE|GLOBOLINE|OZEANIS/.test(code)) return 'ATL';
+    if (/AQUA|COLUMBUS|CRISTALL|MODULARIS/.test(code)) return 'AQU';
+    if (/LILO/.test(code)) return 'LI';
+    return '';
+  }
+
+  window.filterNadrzAccessoryOptions = function() {
+    var group = nadrzSadaGroup(document.getElementById('f_typ_nadrze').value);
+    var sels = form.querySelectorAll('select[name^="item_nadrz_prislusenstvi"]');
+    Array.prototype.forEach.call(sels, function(sel) {
+      var currentValue = sel.value;
+      var currentStillValid = true;
+      Array.prototype.forEach.call(sel.querySelectorAll('option'), function(opt) {
+        var optGroup = opt.getAttribute('data-nadrz-group');
+        // bez skupiny (—, ruční) je vždy vidět; sady jen pro zvolenou rodinu + FIL
+        var visible = !optGroup || (group !== '' && (optGroup === group || optGroup === 'FIL'));
+        opt.hidden = !visible;
+        if (opt.value === currentValue && opt.value !== '' && !visible) currentStillValid = false;
+      });
+      Array.prototype.forEach.call(sel.querySelectorAll('optgroup'), function(og) {
+        var opts = og.querySelectorAll('option');
+        og.hidden = !Array.prototype.some.call(opts, function(o) { return !o.hidden; });
+      });
+      if (!currentStillValid) {
+        sel.value = '';
+        onNadrzPrislusenstviChange(sel);
+      }
+    });
+  };
+
+  // Cena/potvrzení jen u ruční položky (data-manual="1"); sady mají cenu v ceníku.
+  window.onNadrzPrislusenstviChange = function(sel) {
+    var opt = sel.options[sel.selectedIndex];
+    var isManual = !!(opt && opt.getAttribute('data-manual') === '1');
+    var row = sel.closest('.compound-row');
+    var priceWrap = row ? row.querySelector('.accessory-price') : null;
+    var confirmWrap = row ? row.querySelector('.accessory-confirm') : null;
+    var hideExtras = !!sel.value && !isManual;
+    if (priceWrap) priceWrap.style.display = hideExtras ? 'none' : '';
+    if (confirmWrap) confirmWrap.style.display = hideExtras ? 'none' : '';
+    onCompoundItem(sel, 'nadrz_prislusenstvi');
   };
 
   // ── Vlastní poznámky per kategorie ────────────────────────
@@ -1395,6 +1501,7 @@
       var el = document.getElementById(id);
       if (el) el.style.display = hasNadrz ? '' : 'none';
     });
+    filterNadrzAccessoryOptions();
     onPocetNadrzChange();
     saveToLocalStorage();
   };
@@ -1475,6 +1582,9 @@
       var septikFiltrSel = form.querySelector('[name="item_septik_filtr"]');
       if (septikFiltrSel) onSeptikItemChange(septikFiltrSel, 'filtr');
       onNadrzChange();
+      Array.prototype.forEach.call(form.querySelectorAll('select[name^="item_nadrz_prislusenstvi"]'), function(sel) {
+        onNadrzPrislusenstviChange(sel);
+      });
       onVsakItemChange();
       // rezie_podil_* řádky vznikají až tady (refreshRezieSplitRows čte typ_cov
       // atd. nastavené v průchodu výš) — proto se jejich hodnoty obnovují
