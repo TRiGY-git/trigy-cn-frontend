@@ -26,25 +26,6 @@
       margin-bottom: 12px;
     }
 
-    #btn-generate {
-      display: block;
-      width: 100%;
-      padding: 10px 16px;
-      background: #79489c;
-      color: #fff;
-      font-size: 14px;
-      font-weight: 700;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background 0.15s;
-      letter-spacing: 0.01em;
-    }
-    #btn-generate:hover:not(:disabled) { background: #5f3680; }
-    #btn-generate:disabled {
-      background: #b0b0b0;
-      cursor: not-allowed;
-    }
 
     #status {
       margin-top: 12px;
@@ -161,10 +142,8 @@
 <body>
   <div id="demo-banner">Běžím mimo Pipedrive — demo režim</div>
 
-  <button id="btn-generate" type="button">Vygenerovat CN</button>
-
   <div id="status">
-    <div class="status-idle">Vstupy se načítají z polí dealu.</div>
+    <div class="status-idle">Cenovou nabídku vytvoříte přes tlačítko <strong>Formulář</strong> u dealu.</div>
   </div>
 
   <!-- CN history list -->
@@ -194,7 +173,6 @@
     (function () {
       const API_BASE = "https://dvcxqjlbyajqnkylmdya.supabase.co/functions/v1/api";
 
-      const btn = document.getElementById('btn-generate');
       const statusEl = document.getElementById('status');
       const demoBanner = document.getElementById('demo-banner');
 
@@ -305,93 +283,8 @@
           });
       }
 
-      function setIdle() {
-        btn.disabled = false;
-        btn.textContent = 'Vygenerovat CN';
-        statusEl.innerHTML = '<div class="status-idle">Vstupy se načítají z polí dealu.</div>';
-      }
-
-      function setLoading() {
-        btn.disabled = true;
-        btn.textContent = 'Vygenerovat CN';
-        statusEl.innerHTML =
-          '<div class="status-loading"><div class="spinner"></div><span>Generuji cenovou nabídku…</span></div>';
-      }
-
-      function setSuccess(data) {
-        btn.disabled = false;
-        btn.textContent = 'Vygenerovat CN';
-        let dealLink = '';
-        if (data.fileUrl) {
-          dealLink = '<a class="pdf-link" href="' + data.fileUrl + '" target="_blank">Otevřít deal</a>';
-        }
-        let quoteNum = '';
-        if (data.quoteNumber || data.quoteId) {
-          quoteNum = '<div class="quote-number">' + (data.quoteNumber || data.quoteId) + '</div>';
-        }
-        statusEl.innerHTML =
-          '<div class="status-success">' +
-            '<div class="check-row"><span class="check-icon">&#10003;</span><span>Hotovo</span></div>' +
-            quoteNum +
-            dealLink +
-          '</div>';
-      }
-
-      function setError(msg) {
-        btn.disabled = false;
-        btn.textContent = 'Zkusit znovu';
-        statusEl.innerHTML = '<div class="status-error">' + (msg || 'Nastala chyba. Zkuste to znovu.') + '</div>';
-      }
-
-      btn.addEventListener('click', function () {
-        // Mimo Pipedrive nelze generovat
-        if (!sdkReady) {
-          setError('Mimo Pipedrive nelze generovat.');
-          return;
-        }
-
-        // Validace dealId
-        if (!dealId || dealId === 0) {
-          setError('Nepodařilo se zjistit ID dealu.');
-          return;
-        }
-
-        setLoading();
-
-        getSignedToken()
-          .then(function (token) {
-            if (!token) {
-              setError('Nepodařilo se získat podepsaný token ze Pipedrive.');
-              return;
-            }
-
-            return fetch(API_BASE + "/quote/generate", {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token,
-              },
-              body: JSON.stringify({ dealId: dealId }),
-            })
-              .then(function (res) {
-                return res.json().then(function (data) {
-                  return { status: res.status, data: data };
-                });
-              })
-              .then(function (result) {
-                if (result.status >= 200 && result.status < 300 && result.data && result.data.ok) {
-                  setSuccess(result.data);
-                  // Re-fetch CN history after successful generate
-                  getSignedToken().then(function (t) { if (t) loadCnHistory(t); });
-                } else {
-                  setError((result.data && result.data.error) || 'Server vrátil chybu ' + result.status);
-                }
-              });
-          })
-          .catch(function (err) {
-            setError('Síťová chyba: ' + err.message);
-          });
-      });
+      // Automatické generování z polí dealu je dočasně vypnuté — vstupy se zadávají
+      // přes tlačítko „Formulář" u dealu. Panel jen zobrazuje historii CN.
     })();
   </script>
 
