@@ -445,6 +445,58 @@
     .rezie-preview-wrap { max-width: 640px; margin-top: 20px; }
     .rezie-preview-title { font-size: 13px; font-weight: 700; color: #333; margin-bottom: 8px; }
 
+    /* ─── Vzhled a texty CN ──────────────────────────── */
+    .vzhled-card {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 7px;
+      padding: 16px;
+      max-width: 760px;
+      margin-bottom: 20px;
+    }
+    .vzhled-card h3 { font-size: 14px; font-weight: 700; color: #333; margin-bottom: 10px; }
+    .barvy-grid { display: grid; grid-template-columns: repeat(2, minmax(220px, 1fr)); gap: 12px; }
+    .barvy-grid label {
+      font-size: 12px; color: #555; font-weight: 600;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .barvy-grid input[type=color] {
+      width: 40px; height: 30px; padding: 2px; border: 1px solid #ccc; border-radius: 4px;
+      cursor: pointer; flex-shrink: 0;
+    }
+
+    .covspec-row { border: 1px solid #e5e5e5; border-radius: 6px; margin-bottom: 8px; overflow: hidden; }
+    .covspec-row-head {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 12px; cursor: pointer; background: #fafafa;
+      font-size: 13px; font-weight: 600; color: #333;
+      user-select: none;
+    }
+    .covspec-row-head:hover { background: #f3eef9; }
+    .covspec-code { font-family: ui-monospace, Consolas, monospace; font-size: 12px; }
+    .covspec-badge {
+      font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 10px; white-space: nowrap;
+    }
+    .covspec-badge-override { background: #e8f5e9; color: #256029; }
+    .covspec-badge-default { background: #f0f0f0; color: #999; }
+    .covspec-chevron { margin-left: auto; color: #999; transition: transform 0.12s; }
+    .covspec-row.open .covspec-chevron { transform: rotate(90deg); }
+    .covspec-row-body { display: none; padding: 12px 14px; border-top: 1px solid #e5e5e5; }
+    .covspec-row.open .covspec-row-body { display: block; }
+    .covspec-field { margin-bottom: 12px; }
+    .covspec-field label { display: block; font-size: 12px; font-weight: 600; color: #555; margin-bottom: 4px; }
+    .covspec-field input[type=text], .covspec-field textarea {
+      width: 100%; border: 1px solid #ccc; border-radius: 4px; padding: 7px 8px;
+      font: inherit; font-size: 13px; resize: vertical;
+    }
+    .covspec-field input[type=text]:focus, .covspec-field textarea:focus { outline: none; border-color: #79489c; }
+    .covspec-hint { font-size: 11px; color: #777; margin-top: 4px; line-height: 1.4; }
+    .covspec-list-items { display: flex; flex-direction: column; gap: 6px; }
+    .covspec-list-item { display: flex; gap: 6px; align-items: flex-start; }
+    .covspec-list-item textarea { flex: 1; min-height: 34px; resize: vertical; }
+    .covspec-list-item .btn-danger { flex-shrink: 0; margin-top: 2px; }
+    .covspec-row-actions { margin-top: 10px; display: flex; gap: 8px; align-items: center; }
+
     /* ─── Footer ──────────────────────────────────── */
     footer {
       background: #fff;
@@ -470,6 +522,7 @@
       <button class="nav-item" data-section="mapovani" type="button">2. Vstupy z Pipedrive</button>
       <button class="nav-item" data-section="vypoctove" type="button">3. Výpočet položek</button>
       <button class="nav-item" data-section="rezie" type="button">4. Režie a marže</button>
+      <button class="nav-item" data-section="vzhled" type="button">5. Vzhled a texty CN</button>
     </nav>
 
     <main class="content">
@@ -595,6 +648,43 @@
         </div>
       </div>
 
+      <div class="section" id="section-vzhled">
+        <h2>Vzhled a texty CN</h2>
+        <div id="vzhled-banner" class="toast toast-warn" style="display:none;margin-bottom:10px;">
+          Mimo Pipedrive — admin funkce nedostupné
+        </div>
+        <p class="section-lead">Barvy generovaného PDF a texty specifikací ČOV. Změny platí okamžitě pro nově generované nabídky, starší CN zůstávají beze změny (mají uložený vlastní snapshot).</p>
+
+        <div class="vzhled-card">
+          <h3>Barvy dokumentu</h3>
+          <div id="barvy-loading" class="cenik-loading" style="display:none;">Načítám nastavení…</div>
+          <form id="barvy-form" novalidate>
+            <div class="barvy-grid">
+              <label>Hlavní barva (pruhy, nadpisy)<input type="color" id="barva-BRAND"></label>
+              <label>Text na barevném pozadí<input type="color" id="barva-WHITE"></label>
+              <label>Světlé pozadí (sudé řádky tabulky)<input type="color" id="barva-LAVENDER"></label>
+              <label>Ohraničení tabulek<input type="color" id="barva-BORDER_GRAY"></label>
+              <label>Šedá — patička, vedlejší text<input type="color" id="barva-MUTED_GRAY"></label>
+              <label>Světle šedá — placeholder referencí<input type="color" id="barva-PLACEHOLDER_GRAY"></label>
+              <label>Zvýraznění poznámky (platnost nabídky)<input type="color" id="barva-HIGHLIGHT_BG"></label>
+            </div>
+            <div class="rezie-actions">
+              <button class="btn btn-secondary" type="button" id="barvy-reset">Obnovit výchozí</button>
+              <button class="btn btn-primary" type="submit">Uložit barvy</button>
+            </div>
+          </form>
+          <div id="barvy-toast" class="toast"></div>
+        </div>
+
+        <div class="vzhled-card">
+          <h3>Texty ČOV — „Základní vlastnosti“ a popis jednotky</h3>
+          <p class="section-lead" style="margin-top:-4px;">Zobrazují se jen u modelů níže — ostatní modely zůstávají u jednoduchého názvu z ceníku. Placeholder <code>{natokL}</code> v popisu jednotky se při generování CN automaticky nahradí denním nátokem z ceníku (neupravovat na konkrétní číslo).</p>
+          <div id="covspec-loading" class="cenik-loading" style="display:none;">Načítám texty…</div>
+          <div id="covspec-list"></div>
+        </div>
+        <div id="covspec-toast" class="toast"></div>
+      </div>
+
       <div class="section" id="section-mapovani">
         <h2>Vstupy z Pipedrive</h2>
         <div id="mapovani-banner" class="toast toast-warn" style="display:none;margin-bottom:10px;">
@@ -711,18 +801,20 @@
           _sdk = await new AppExtensionsSDK().initialize();
           window.cnSetReadiness('pipedrive', { label: 'Připojeno', tone: 'ready' },
             'Přístup k administraci je ověřen přes Pipedrive.');
-          // Share SDK with ceník + výpočtové položky + režie modules
+          // Share SDK with ceník + výpočtové položky + režie + vzhled modules
           if (window._cenikSetSdk) window._cenikSetSdk(_sdk, false);
           if (window._vypoctoveSetSdk) window._vypoctoveSetSdk(_sdk, false);
           if (window._rezieSetSdk) window._rezieSetSdk(_sdk, false);
+          if (window._vzhledSetSdk) window._vzhledSetSdk(_sdk, false);
         } catch (e) {
           _outsidePipedrive = true;
           window.cnSetReadiness('pipedrive', { label: 'Nepřipojeno', tone: 'error' },
             'Otevřete tuto stránku v Pipedrive, aby bylo možné ověřit oprávnění.');
-          // Share outside-Pipedrive state with ceník + výpočtové položky + režie modules
+          // Share outside-Pipedrive state with ceník + výpočtové položky + režie + vzhled modules
           if (window._cenikSetSdk) window._cenikSetSdk(null, true);
           if (window._vypoctoveSetSdk) window._vypoctoveSetSdk(null, true);
           if (window._rezieSetSdk) window._rezieSetSdk(null, true);
+          if (window._vzhledSetSdk) window._vzhledSetSdk(null, true);
           console.error('[CN settings] SDK init selhal:', e);
           const banner = document.getElementById('mapovani-banner');
           banner.style.display = 'block';
@@ -1653,6 +1745,276 @@
       });
 
       renderPreview(); // hodnoty 0 dokud se nenačte skutečná konfigurace
+    })();
+  </script>
+  <script>
+    /* ═══════════════════════════════════════════════════════════════════════
+       Vzhled a texty CN — barvy dokumentu (document_theme) + texty ČOV
+       (cov_spec_sheets). Obojí žije v pricing_config jako override — prázdné
+       pole/chybějící klíč = použije se hardcoded default z kódu (theme.ts /
+       covSpecSheets.ts). Bez UI pro proměnné zatím ({natokL} se edituje jako
+       obyčejný text — dosazuje se až při generování CN).
+       ═══════════════════════════════════════════════════════════════════════ */
+    (function () {
+      'use strict';
+
+      var _vzLoaded = false;
+      var _vzApiBase = 'https://dvcxqjlbyajqnkylmdya.supabase.co/functions/v1/api';
+      var _vzSdk = null;
+      var _vzOutside = false;
+
+      window._vzhledSetSdk = function (sdk, outside) {
+        _vzSdk = sdk;
+        _vzOutside = outside;
+      };
+
+      async function vzGetToken() {
+        if (_vzOutside || !_vzSdk) throw new Error('outside Pipedrive');
+        var CommandKey = (typeof AppExtensionsSDK !== 'undefined' && AppExtensionsSDK.Command)
+          ? AppExtensionsSDK.Command.GET_SIGNED_TOKEN : 'get_signed_token';
+        var result = await _vzSdk.execute(CommandKey);
+        return result.token;
+      }
+
+      async function vzApiFetch(path, options) {
+        var token = await vzGetToken();
+        var res = await fetch(_vzApiBase + path, Object.assign({
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        }, options || {}));
+        return res.json();
+      }
+
+      function showToast(id, msg, type) {
+        var el = document.getElementById(id);
+        el.textContent = msg;
+        el.className = 'toast show toast-' + type;
+        setTimeout(function () { el.classList.remove('show'); }, 5000);
+      }
+
+      function escapeHtml(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, function (ch) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
+        });
+      }
+
+      // ── Barvy dokumentu ────────────────────────────────────────────────
+      var COLOR_KEYS = ['BRAND', 'WHITE', 'LAVENDER', 'BORDER_GRAY', 'MUTED_GRAY', 'PLACEHOLDER_GRAY', 'HIGHLIGHT_BG'];
+      var DEFAULT_COLORS = {
+        BRAND: '#79489c', LAVENDER: '#efe7f5', WHITE: '#ffffff', BORDER_GRAY: '#cccccc',
+        MUTED_GRAY: '#888888', PLACEHOLDER_GRAY: '#dddddd', HIGHLIGHT_BG: '#fff9e6',
+      };
+
+      async function loadBarvy() {
+        if (_vzOutside) {
+          document.getElementById('vzhled-banner').style.display = 'block';
+          return;
+        }
+        var loading = document.getElementById('barvy-loading');
+        loading.style.display = 'block';
+        try {
+          var res = await vzApiFetch('/admin/theme-colors');
+          if (!res.ok) throw new Error(res.error || 'Chyba při načítání barev');
+          COLOR_KEYS.forEach(function (key) {
+            document.getElementById('barva-' + key).value = (res.colors && res.colors[key]) || DEFAULT_COLORS[key];
+          });
+        } catch (err) {
+          showToast('barvy-toast', 'Chyba: ' + err.message, 'error');
+        } finally {
+          loading.style.display = 'none';
+        }
+      }
+
+      async function saveBarvy(event) {
+        event.preventDefault();
+        if (_vzOutside) return;
+        var payload = {};
+        COLOR_KEYS.forEach(function (key) {
+          payload[key] = document.getElementById('barva-' + key).value;
+        });
+        try {
+          var res = await vzApiFetch('/admin/pricing-config/document_theme', {
+            method: 'PUT',
+            body: JSON.stringify(payload),
+          });
+          if (!res.ok) throw new Error(res.error ? JSON.stringify(res.error) : 'Uložení selhalo');
+          showToast('barvy-toast', 'Barvy uloženy — platí pro nově generované nabídky.', 'success');
+        } catch (err) {
+          showToast('barvy-toast', 'Chyba ukládání: ' + err.message, 'error');
+        }
+      }
+
+      document.getElementById('barvy-form').addEventListener('submit', saveBarvy);
+      document.getElementById('barvy-reset').addEventListener('click', function () {
+        COLOR_KEYS.forEach(function (key) {
+          document.getElementById('barva-' + key).value = DEFAULT_COLORS[key];
+        });
+      });
+
+      // ── Texty ČOV (cov_spec_sheets) ─────────────────────────────────────
+      function listItemRow(value, placeholder) {
+        var wrap = document.createElement('div');
+        wrap.className = 'covspec-list-item';
+        wrap.innerHTML =
+          '<textarea rows="2">' + escapeHtml(value || '') + '</textarea>' +
+          '<button type="button" class="btn btn-danger">×</button>';
+        wrap.querySelector('textarea').placeholder = placeholder || '';
+        wrap.querySelector('button').addEventListener('click', function () { wrap.remove(); });
+        return wrap;
+      }
+
+      function buildRow(entry) {
+        var code = entry.code;
+        var sheet = entry.sheet || { title: '', unitDescription: '', includedParts: [], specBullets: [] };
+
+        var row = document.createElement('div');
+        row.className = 'covspec-row';
+        row.dataset.code = code;
+
+        var head = document.createElement('div');
+        head.className = 'covspec-row-head';
+        head.innerHTML =
+          '<span class="covspec-code">' + escapeHtml(code) + '</span>' +
+          '<span class="covspec-badge ' + (entry.hasOverride ? 'covspec-badge-override' : 'covspec-badge-default') + '">' +
+            (entry.hasOverride ? 'Upraveno' : 'Výchozí z kódu') +
+          '</span>' +
+          '<span class="covspec-chevron">▸</span>';
+        head.addEventListener('click', function () { row.classList.toggle('open'); });
+
+        var body = document.createElement('div');
+        body.className = 'covspec-row-body';
+
+        var titleField = document.createElement('div');
+        titleField.className = 'covspec-field';
+        titleField.innerHTML =
+          '<label>Titulek bloku „Základní vlastnosti“</label>' +
+          '<input type="text" class="f-title" value="' + escapeHtml(sheet.title) + '">';
+
+        var descField = document.createElement('div');
+        descField.className = 'covspec-field';
+        descField.innerHTML =
+          '<label>Popis jednotky (položka A)</label>' +
+          '<textarea class="f-unitdesc" rows="2">' + escapeHtml(sheet.unitDescription) + '</textarea>' +
+          '<div class="covspec-hint">{natokL} se při generování CN nahradí denním nátokem z ceníku.</div>';
+
+        var partsField = document.createElement('div');
+        partsField.className = 'covspec-field';
+        partsField.innerHTML = '<label>Součásti osazené v ČOV (B, C, D…)</label>' +
+          '<div class="covspec-list-items f-parts"></div>';
+        var partsAdd = document.createElement('button');
+        partsAdd.type = 'button';
+        partsAdd.className = 'btn btn-secondary';
+        partsAdd.style.marginTop = '6px';
+        partsAdd.textContent = '+ Přidat součást';
+
+        var bulletsField = document.createElement('div');
+        bulletsField.className = 'covspec-field';
+        bulletsField.innerHTML = '<label>Odrážky „Základní vlastnosti“</label>' +
+          '<div class="covspec-list-items f-bullets"></div>';
+        var bulletsAdd = document.createElement('button');
+        bulletsAdd.type = 'button';
+        bulletsAdd.className = 'btn btn-secondary';
+        bulletsAdd.style.marginTop = '6px';
+        bulletsAdd.textContent = '+ Přidat odrážku';
+
+        var partsItems = partsField.querySelector('.f-parts');
+        (sheet.includedParts || []).forEach(function (v) { partsItems.appendChild(listItemRow(v)); });
+        partsAdd.addEventListener('click', function () { partsItems.appendChild(listItemRow('', 'Nová součást…')); });
+
+        var bulletsItems = bulletsField.querySelector('.f-bullets');
+        (sheet.specBullets || []).forEach(function (v) { bulletsItems.appendChild(listItemRow(v)); });
+        bulletsAdd.addEventListener('click', function () { bulletsItems.appendChild(listItemRow('', 'Nová odrážka…')); });
+
+        var actions = document.createElement('div');
+        actions.className = 'covspec-row-actions';
+        var saveBtn = document.createElement('button');
+        saveBtn.type = 'button';
+        saveBtn.className = 'btn btn-primary';
+        saveBtn.textContent = 'Uložit ' + code;
+        saveBtn.addEventListener('click', function () { saveCovSpecRow(code, row, head); });
+        actions.appendChild(saveBtn);
+
+        body.appendChild(titleField);
+        body.appendChild(descField);
+        body.appendChild(partsField);
+        body.appendChild(partsAdd);
+        body.appendChild(bulletsField);
+        body.appendChild(bulletsAdd);
+        body.appendChild(actions);
+
+        row.appendChild(head);
+        row.appendChild(body);
+        return row;
+      }
+
+      function collectRow(row) {
+        var textareasIn = function (sel) {
+          return Array.prototype.map.call(row.querySelectorAll(sel + ' textarea'), function (t) { return t.value.trim(); })
+            .filter(function (v) { return v !== ''; });
+        };
+        return {
+          title: row.querySelector('.f-title').value.trim(),
+          unitDescription: row.querySelector('.f-unitdesc').value.trim(),
+          includedParts: textareasIn('.f-parts'),
+          specBullets: textareasIn('.f-bullets'),
+        };
+      }
+
+      var _covspecOverrides = {};
+
+      async function loadCovSpecs() {
+        if (_vzOutside) return;
+        var loading = document.getElementById('covspec-loading');
+        var list = document.getElementById('covspec-list');
+        loading.style.display = 'block';
+        try {
+          var res = await vzApiFetch('/admin/cov-spec-sheets');
+          if (!res.ok) throw new Error(res.error || 'Chyba při načítání textů');
+          list.innerHTML = '';
+          (res.sheets || []).forEach(function (entry) {
+            if (entry.hasOverride) _covspecOverrides[entry.code] = entry.sheet;
+            list.appendChild(buildRow(entry));
+          });
+        } catch (err) {
+          showToast('covspec-toast', 'Chyba: ' + err.message, 'error');
+        } finally {
+          loading.style.display = 'none';
+        }
+      }
+
+      async function saveCovSpecRow(code, row, head) {
+        var values = collectRow(row);
+        if (!values.title || !values.unitDescription) {
+          showToast('covspec-toast', 'Titulek a popis jednotky nesmí být prázdné (' + code + ').', 'error');
+          return;
+        }
+        var payload = Object.assign({}, _covspecOverrides);
+        payload[code] = values;
+        try {
+          var res = await vzApiFetch('/admin/pricing-config/cov_spec_sheets', {
+            method: 'PUT',
+            body: JSON.stringify({ overrides: payload }),
+          });
+          if (!res.ok) throw new Error(res.error ? JSON.stringify(res.error) : 'Uložení selhalo');
+          _covspecOverrides = payload;
+          var badge = head.querySelector('.covspec-badge');
+          badge.className = 'covspec-badge covspec-badge-override';
+          badge.textContent = 'Upraveno';
+          showToast('covspec-toast', 'Text pro ' + code + ' uložen.', 'success');
+        } catch (err) {
+          showToast('covspec-toast', 'Chyba ukládání: ' + err.message, 'error');
+        }
+      }
+
+      // Lazy-load on first open
+      document.querySelectorAll('.nav-item').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          if (btn.dataset.section === 'vzhled' && !_vzLoaded) {
+            _vzLoaded = true;
+            loadBarvy();
+            loadCovSpecs();
+          }
+        });
+      });
     })();
   </script>
 

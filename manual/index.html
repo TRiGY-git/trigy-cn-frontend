@@ -431,20 +431,77 @@
           <div class="compound-row with-confirm">
             <div class="compound-sub">
               <label>Typ položky</label>
-              <select name="item_cov_prislusenstvi" onchange="onCompoundItem(this,'cov_prislusenstvi')">
+              <select name="item_cov_prislusenstvi" onchange="onCovPrislusenstviChange(this)">
                 <option value="">— bez příslušenství —</option>
-                <option value="COV-PRISLUSENSTVI-MANUAL">Příslušenství ČOV – dle návrhu</option>
+                <optgroup label="AT">
+                  <option value="COV-PRISL-NASTAVEC-AT-100" data-brand="at">Nástavec 100 mm — 850 Kč/ks</option>
+                  <option value="COV-PRISL-NASTAVEC-AT-200" data-brand="at">Nástavec 200 mm — 1 700 Kč/ks</option>
+                  <option value="COV-PRISL-NASTAVEC-AT-300" data-brand="at">Nástavec 300 mm — 2 550 Kč/ks</option>
+                  <option value="COV-PRISL-NASTAVEC-AT-400" data-brand="at">Nástavec 400 mm — 3 400 Kč/ks</option>
+                  <option value="COV-PRISL-NASTAVEC-AT-500" data-brand="at">Nástavec 500 mm — 4 250 Kč/ks</option>
+                  <option value="COV-PRISL-NASTAVEC-AT-600" data-brand="at">Nástavec 600 mm — 5 100 Kč/ks</option>
+                  <option value="COV-PRISL-NASTAVEC-AT-700" data-brand="at">Nástavec 700 mm — 5 950 Kč/ks</option>
+                  <option value="COV-PRISL-NASTAVEC-AT-800" data-brand="at">Nástavec 800 mm — 6 800 Kč/ks</option>
+                  <option value="COV-PRISL-NASTAVEC-AT-900" data-brand="at">Nástavec 900 mm — 7 650 Kč/ks</option>
+                  <option value="COV-PRISL-NASTAVEC-AT-1000" data-brand="at">Nástavec 1000 mm — 8 500 Kč/ks</option>
+                  <option value="COV-PRISL-POKLOP-AT-ZESILENY" data-brand="at">Poklop zesílený do 250 kg, Ø1400 mm — 8 100 Kč/ks</option>
+                  <option value="COV-PRISL-POKLOP-AT-STANDARD" data-brand="at">Poklop standardní do 100 kg, Ø1400 mm — 2 900 Kč/ks</option>
+                  <option value="COV-PRISL-VIKO-AT-MALE" data-brand="at">Malé víko Ø660 mm (ROTO) — 1 170 Kč/ks</option>
+                  <option value="COV-PRISL-RIDICI-JEDNOTKA-AT" data-brand="at">Řídící jednotka AQC Basic — 3 200 Kč/ks</option>
+                </optgroup>
+                <optgroup label="TOPAS">
+                  <option value="COV-PRISL-GSM-TOPAS" data-brand="topas">GSM modul — 3 000 Kč/ks</option>
+                  <option value="COV-PRISL-MODBUS-TOPAS-S" data-brand="topas">Modul Modbus (TOPAS S) — 4 000 Kč/ks</option>
+                  <option value="COV-PRISL-UV-LAMPA-TOPAS" data-brand="topas">UV lampa 18W — 4 300 Kč/ks</option>
+                </optgroup>
+                <optgroup label="MONOcomp / VARIOcomp">
+                  <option value="COV-PRISL-NASTAVEC-MONOCOMP-100" data-brand="monocomp">Nástavec 100 mm — 2 800 Kč/ks</option>
+                  <option value="COV-PRISL-NASTAVEC-MONOCOMP-200" data-brand="monocomp">Nástavec 200 mm — 3 200 Kč/ks</option>
+                  <option value="COV-PRISL-NASTAVEC-MONOCOMP-300" data-brand="monocomp">Nástavec 300 mm — 3 600 Kč/ks</option>
+                  <option value="COV-PRISL-NASTAVEC-MONOCOMP-400" data-brand="monocomp">Nástavec 400 mm — 4 000 Kč/ks</option>
+                  <option value="COV-PRISL-NASTAVEC-MONOCOMP-500" data-brand="monocomp">Nástavec 500 mm — 4 400 Kč/ks</option>
+                  <option value="COV-PRISL-NASTAVEC-MONOCOMP-600" data-brand="monocomp">Nástavec 600 mm — 4 950 Kč/ks</option>
+                  <option value="COV-PRISL-NASTAVEC-MONOCOMP-700" data-brand="monocomp">Nástavec 700 mm — 5 400 Kč/ks</option>
+                  <option value="COV-PRISL-NASTAVEC-MONOCOMP-800" data-brand="monocomp">Nástavec 800 mm — 5 600 Kč/ks</option>
+                  <option value="COV-PRISL-NASTAVEC-MONOCOMP-900" data-brand="monocomp">Nástavec 900 mm — 6 000 Kč/ks</option>
+                  <option value="COV-PRISL-NASTAVEC-MONOCOMP-1000" data-brand="monocomp">Nástavec 1000 mm — 6 400 Kč/ks</option>
+                  <option value="COV-PRISL-JUTOVY-PYTEL-MONOCOMP-1KS" data-brand="monocomp">Jutový pytel, 1 ks — 89 Kč/ks</option>
+                  <option value="COV-PRISL-JUTOVY-PYTEL-MONOCOMP-5KS" data-brand="monocomp">Jutový pytel, 5 ks — 410 Kč/ks</option>
+                  <option value="COV-PRISL-JUTOVY-PYTEL-MONOCOMP-10KS" data-brand="monocomp">Jutový pytel, 10 ks — 800 Kč/ks</option>
+                  <option value="COV-PRISL-NOSIC-BIOMASY-VARIO5K" data-brand="monocomp">Nosič biomasy (VARIO 5K) — 1 800 Kč/ks</option>
+                  <option value="COV-PRISL-DAVKOVAC-CHEMIKALII-MONOCOMP" data-brand="monocomp">Dávkovač chemikálií — 12 500 Kč/ks</option>
+                  <option value="COV-PRISL-GSM-VARIOCOMP" data-brand="monocomp">GSM modul (VARIOcomp) — 8 500 Kč/ks</option>
+                </optgroup>
+                <optgroup label="Univerzální (všechny značky)">
+                  <option value="COV-PRISL-VIKO-DMYCHADLO-BEZ-ZAMKU">Víko na šachtu dmychadla, bez zámků — 900 Kč/ks</option>
+                  <option value="COV-PRISL-VIKO-DMYCHADLO-SE-ZAMKY">Víko na šachtu dmychadla, se zámky (2×) — 1 500 Kč/ks</option>
+                  <option value="COV-PRISL-VIKO-DMYCHADLO-SE-ZAMKY-PETLICE">Víko na šachtu dmychadla, se zámky a petlicemi — 1 700 Kč/ks</option>
+                  <option value="COV-PRISL-SACHTA-DMYCHADLO-BEZ-ZAMKU">Šachta na dmychadlo, bez zamykání — 1 950 Kč/ks</option>
+                  <option value="COV-PRISL-SACHTA-DMYCHADLO-SE-ZAMKY">Šachta na dmychadlo, se zámky a petlicemi — 2 570 Kč/ks</option>
+                  <option value="COV-PRISL-POMUCKY-UDRZBA">Pomůcky k údržbě a provozu — 1 500 Kč/kpl</option>
+                  <option value="COV-PRISL-SACHTA-REVO">Revizní a odběrná šachta REVO — 8 300 Kč/ks</option>
+                  <option value="COV-PRISL-ODVODNOVACI-BOX-STANDARD">Odvodňovací box na kaly — Standard — 7 550 Kč/ks</option>
+                  <option value="COV-PRISL-ODVODNOVACI-BOX-MANUAL">Odvodňovací box na kaly — Manual — 8 400 Kč/ks</option>
+                  <option value="COV-PRISL-ODVODNOVACI-BOX-AUTOMATIC">Odvodňovací box na kaly — Automatic — 9 500 Kč/ks</option>
+                  <option value="COV-PRISL-NAHRADNI-PYTEL-1KS">Náhradní pytel k odvodň. boxu, 1 ks — 1 100 Kč/ks</option>
+                  <option value="COV-PRISL-NAHRADNI-PYTEL-3KS">Náhradní pytel k odvodň. boxu, 3 ks — 3 281 Kč/ks</option>
+                  <option value="COV-PRISL-NAHRADNI-PYTEL-5KS">Náhradní pytel k odvodň. boxu, 5 ks — 5 455 Kč/ks</option>
+                  <option value="COV-PRISL-SKRINKA-NASTENNA">Nástěnná skříňka na dmychadlo a řídící jednotku — 5 500 Kč/ks</option>
+                  <option value="COV-PRISL-PILIR-SAMOSTATNY">Samostatně stojící pilíř — 9 950 Kč/ks</option>
+                  <option value="COV-PRISL-PILIR-DREVENY">Dřevěný pilíř — 12 000 Kč/ks</option>
+                </optgroup>
+                <option value="COV-PRISLUSENSTVI-MANUAL" data-manual="1">Jiné — ruční cena (vyžaduje potvrzení TP)</option>
               </select>
             </div>
             <div class="compound-sub">
               <label>Množství</label>
-              <input type="number" name="qty_cov_prislusenstvi" min="1" step="1" placeholder="ks">
+              <input type="number" name="qty_cov_prislusenstvi" min="1" step="1" placeholder="1">
             </div>
-            <div class="compound-sub">
+            <div class="compound-sub" id="cov_prislusenstvi_price_wrap">
               <label>Cena / ks (bez DPH)</label>
               <input type="number" name="price_cov_prislusenstvi" min="0" step="100" placeholder="Kč">
             </div>
-            <div class="compound-sub">
+            <div class="compound-sub" id="cov_prislusenstvi_confirm_wrap">
               <label>Potvrzení</label>
               <select name="confirm_cov_prislusenstvi">
                 <option value="">—</option>
@@ -452,7 +509,7 @@
               </select>
             </div>
           </div>
-          <div class="hint">Pumpa, UV lampa, manostat, záložní vzduchování apod.</div>
+          <div class="hint">Nabídka se filtruje podle zvoleného typu ČOV. Množství výchozí 1 ks. Cenu a potvrzení TP vyplňuj jen u položky „Jiné — ruční cena“.</div>
         </div>
 
         <div class="frow">
@@ -1066,7 +1123,56 @@
       var el = document.getElementById(id);
       if (el) el.style.display = hasCov ? '' : 'none';
     });
+    filterCovAccessoryOptions();
     saveToLocalStorage();
+  };
+
+  // Stejná logika jako covBrand() v supabase/functions/_shared/quote/productInfo.ts —
+  // musí zůstat v souladu, jinak by nabídka v UI a validace na backendu mohly nesouhlasit.
+  function covBrand(code) {
+    if (!code) return 'ostatni';
+    if (code.indexOf('COV-TOPAS') === 0) return 'topas';
+    if (/^COV-AT\d/.test(code)) return 'at';
+    if (code.indexOf('COV-MONOCOMP') === 0) return 'monocomp';
+    return 'ostatni';
+  }
+
+  // Nabídne jen příslušenství kompatibilní se zvolenou značkou ČOV (položky bez
+  // data-brand jsou univerzální, nabízí se vždy). Když už vybraná položka přestane
+  // sedět (změna typu ČOV), výběr se zruší, ať nezůstane skrytá neplatná volba.
+  window.filterCovAccessoryOptions = function() {
+    var sel = form.querySelector('[name="item_cov_prislusenstvi"]');
+    if (!sel) return;
+    var brand = covBrand(document.getElementById('f_typ_cov').value);
+    var currentValue = sel.value;
+    var currentStillValid = true;
+    Array.prototype.forEach.call(sel.querySelectorAll('option'), function(opt) {
+      var optBrand = opt.getAttribute('data-brand');
+      var visible = !optBrand || optBrand === brand;
+      opt.hidden = !visible;
+      if (opt.value === currentValue && opt.value !== '' && !visible) currentStillValid = false;
+    });
+    Array.prototype.forEach.call(sel.querySelectorAll('optgroup'), function(group) {
+      var opts = group.querySelectorAll('option');
+      group.hidden = !Array.prototype.some.call(opts, function(o) { return !o.hidden; });
+    });
+    if (!currentStillValid) {
+      sel.value = '';
+      onCovPrislusenstviChange(sel);
+    }
+  };
+
+  // Cena/ks a potvrzení TP dávají smysl jen u ruční položky (COV-PRISLUSENSTVI-MANUAL,
+  // data-manual="1") — katalogové položky mají cenu i potvrzení vyřešené v ceníku.
+  window.onCovPrislusenstviChange = function(sel) {
+    var opt = sel.options[sel.selectedIndex];
+    var isManual = !!(opt && opt.getAttribute('data-manual') === '1');
+    var priceWrap = document.getElementById('cov_prislusenstvi_price_wrap');
+    var confirmWrap = document.getElementById('cov_prislusenstvi_confirm_wrap');
+    var hideExtras = !!sel.value && !isManual;
+    if (priceWrap) priceWrap.style.display = hideExtras ? 'none' : '';
+    if (confirmWrap) confirmWrap.style.display = hideExtras ? 'none' : '';
+    onCompoundItem(sel, 'cov_prislusenstvi');
   };
 
   window.onNadrzChange = function() {
@@ -1123,6 +1229,8 @@
       }
       // Trigger visibility updates
       onCovChange();
+      var covPrislSel = form.querySelector('[name="item_cov_prislusenstvi"]');
+      if (covPrislSel) onCovPrislusenstviChange(covPrislSel);
       onNadrzChange();
       onVsakItemChange();
       // rezie_podil_* řádky vznikají až tady (refreshRezieSplitRows čte typ_cov
