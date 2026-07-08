@@ -537,7 +537,7 @@
           <div class="hint">Nabídka se filtruje podle zvoleného typu ČOV. Můžeš přidat víc kusů (např. 1× Modbus + 1× GSM). Množství výchozí 1 ks. Cenu a potvrzení TP vyplňuj jen u položky „Jiné — ruční cena“.</div>
         </div>
 
-        <div class="frow">
+        <div class="frow" data-show-if="typ_cov">
           <div class="flabel">
             <label for="f_delka_svodu_cov">Délka svodu ČOV (m)</label>
             <div class="hint">Přípojka od domu k ČOV.</div>
@@ -547,7 +547,7 @@
             <input type="number" id="f_delka_svodu_cov" name="delka_svodu_cov" min="0" step="1" placeholder="0">
           </div>
         </div>
-        <div class="frow">
+        <div class="frow" data-show-if="typ_cov">
           <div class="flabel">
             <label for="f_delka_rozvodu_cov">Délka rozvodu ČOV (m)</label>
             <div class="hint">Rozvod od ČOV dál (vsak/vyústění).</div>
@@ -782,7 +782,7 @@
           <div class="hint">Cena z ceníku; účtuje se jen při výběru typu. Počet = kolik kusů.</div>
         </div>
 
-        <div class="frow">
+        <div class="frow" data-show-if="typ_nadrze">
           <div class="flabel">
             <label for="f_delka_svodu_nadrz">Délka svodu nádrž (m)</label>
             <div class="hint">Přípojka od domu k nádrži.</div>
@@ -792,7 +792,7 @@
             <input type="number" id="f_delka_svodu_nadrz" name="delka_svodu_nadrz" min="0" step="1" placeholder="0">
           </div>
         </div>
-        <div class="frow">
+        <div class="frow" data-show-if="typ_nadrze">
           <div class="flabel">
             <label for="f_delka_rozvodu_nadrz">Délka rozvodu nádrž (m)</label>
             <div class="hint">Rozvod od nádrže dál (vsak/vyústění).</div>
@@ -842,7 +842,7 @@
                 <option value="VSAK-STERKOVA-JAMA">Vsakovací jáma (klasický štěrkový vsak, bez tělesa)</option>
               </select>
             </div>
-            <div class="compound-sub" id="vsak_tunel_qty_wrap">
+            <div class="compound-sub" id="vsak_tunel_qty_wrap" data-no-auto-qty>
               <label>Počet kusů <span class="key" style="display:inline">qty_vsak_tunel</span></label>
               <input type="number" name="qty_vsak_tunel" min="1" step="1" placeholder="ks">
             </div>
@@ -991,7 +991,7 @@
           </div>
         </div>
 
-        <div class="frow">
+        <div class="frow" data-show-if="item_septik_septik">
           <div class="flabel">
             <label for="f_delka_svodu_septik">Délka svodu septik (m)</label>
             <div class="hint">Přípojka od domu k septiku.</div>
@@ -1001,7 +1001,7 @@
             <input type="number" id="f_delka_svodu_septik" name="delka_svodu_septik" min="0" step="1" placeholder="0">
           </div>
         </div>
-        <div class="frow">
+        <div class="frow" data-show-if="item_septik_septik">
           <div class="flabel">
             <label for="f_delka_rozvodu_septik">Délka rozvodu septik (m)</label>
             <div class="hint">Rozvod od septiku dál (filtr/vsak/vyústění).</div>
@@ -1342,7 +1342,7 @@
     var row = sel.closest('.compound-row');
     var priceWrap = row ? row.querySelector('.accessory-price') : null;
     var confirmWrap = row ? row.querySelector('.accessory-confirm') : null;
-    var hideExtras = !!sel.value && !isManual;
+    var hideExtras = !sel.value || !isManual;
     if (priceWrap) priceWrap.style.display = hideExtras ? 'none' : '';
     if (confirmWrap) confirmWrap.style.display = hideExtras ? 'none' : '';
     onCompoundItem(sel, 'cov_prislusenstvi');
@@ -1441,7 +1441,7 @@
     var row = sel.closest('.compound-row');
     var priceWrap = row ? row.querySelector('.accessory-price') : null;
     var confirmWrap = row ? row.querySelector('.accessory-confirm') : null;
-    var hideExtras = !!sel.value && !isManual;
+    var hideExtras = !sel.value || !isManual;
     if (priceWrap) priceWrap.style.display = hideExtras ? 'none' : '';
     if (confirmWrap) confirmWrap.style.display = hideExtras ? 'none' : '';
     onCompoundItem(sel, 'nadrz_prislusenstvi');
@@ -1490,7 +1490,7 @@
     var opt = sel.options[sel.selectedIndex];
     var isManual = !!(opt && opt.getAttribute('data-manual') === '1');
     var priceWrap = document.getElementById('septik_' + part + '_price_wrap');
-    var hidePrice = !!sel.value && !isManual;
+    var hidePrice = !sel.value || !isManual;
     if (priceWrap) priceWrap.style.display = hidePrice ? 'none' : '';
     onCompoundItem(sel, 'septik_' + part);
   };
@@ -1518,9 +1518,11 @@
     // Vsakovací jáma nemá žádné vsakovací těleso ke koupi — počet kusů/cena
     // se pro ni nepoužívají (a nejsou vyžadované).
     var isGravelPit = vsakVal === 'VSAK-STERKOVA-JAMA';
-    document.getElementById('vsak_tunel_qty_wrap').style.display = isGravelPit ? 'none' : '';
-    document.getElementById('vsak_tunel_price_wrap').style.display = isGravelPit ? 'none' : '';
-    document.getElementById('vsak_tunel_hint').style.display = isGravelPit ? 'none' : '';
+    // Skryté, když není vsak vybraný (— bez vsaku —) nebo je to štěrková jáma.
+    var hideQty = !vsakVal || isGravelPit;
+    document.getElementById('vsak_tunel_qty_wrap').style.display = hideQty ? 'none' : '';
+    document.getElementById('vsak_tunel_price_wrap').style.display = hideQty ? 'none' : '';
+    document.getElementById('vsak_tunel_hint').style.display = hideQty ? 'none' : '';
     saveToLocalStorage();
   };
 
@@ -1908,11 +1910,36 @@
     restoreFromLocalStorage();
     loadDealTitle();
     refreshRezieSplitRows();
+    refreshConditionalFields();
     showMsg('Hodnoty obnoveny z uložených dat.', '');
   });
+  // ── Podmíněná viditelnost polí ────────────────────────────
+  // A) Množství (qty_*) se skryje, když je select ve stejném řádku prázdný
+  //    („— bez / — ne —"). B) Pole se závislostí (data-show-if="jinePole")
+  //    se skryje, dokud řídící pole není vyplněné (např. délka rozvodu ČOV,
+  //    dokud není vybraná ČOV). Vsak si množství řídí sám (data-no-auto-qty).
+  window.refreshConditionalFields = function() {
+    // A) qty vázané na select ve svém řádku
+    Array.prototype.forEach.call(form.querySelectorAll('input[name^="qty_"]'), function(inp) {
+      var cell = inp.closest('.compound-sub') || inp.parentElement;
+      if (!cell || cell.hasAttribute('data-no-auto-qty')) return;
+      var scope = inp.closest('.compound-row') || inp.closest('.compound');
+      var sel = scope ? scope.querySelector('select') : null;
+      if (!sel) return;
+      cell.style.display = String(sel.value || '').trim() !== '' ? '' : 'none';
+    });
+    // B) pole závislá na jiném poli
+    Array.prototype.forEach.call(form.querySelectorAll('[data-show-if]'), function(el) {
+      var ctrl = form.querySelector('[name="' + el.getAttribute('data-show-if') + '"]');
+      var on = ctrl && String(ctrl.value || '').trim() !== '';
+      el.style.display = on ? '' : 'none';
+    });
+  };
+
   form.addEventListener('change', function() {
     saveToLocalStorage();
     refreshRezieSplitRows();
+    refreshConditionalFields();
   });
   document.getElementById('rezie-split-rows').addEventListener('input', updateRezieSplitSum);
 
@@ -1922,6 +1949,7 @@
     await initSdk();
     restoreFromLocalStorage();
     refreshRezieSplitRows();
+    refreshConditionalFields();
     await loadDealTitle();
     setStatus('Připraveno. Deal #' + (dealId || '?'));
   })();
