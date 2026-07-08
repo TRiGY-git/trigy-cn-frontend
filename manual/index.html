@@ -152,6 +152,13 @@
     .btn-danger { background: var(--surface); color: var(--danger); border-color: var(--danger-border); }
     .btn-danger:hover:not(:disabled) { background: var(--danger-bg); }
 
+    /* Opakovatelné příslušenství (víc kusů) */
+    .accessory-row { margin-bottom: 10px; }
+    .accessory-remove-wrap { margin-top: 4px; text-align: right; }
+    .accessory-remove-btn { padding: 3px 9px; font-size: 11px; }
+    .btn-add-accessory { margin-top: 2px; padding: 5px 10px; font-size: 12px; background: var(--surface); color: var(--text); border-color: var(--border-strong); }
+    .btn-add-accessory:hover:not(:disabled) { background: var(--bg); }
+
     /* Result card */
     .result-card {
       display: none; padding: 12px;
@@ -428,6 +435,8 @@
         <!-- Příslušenství ČOV -->
         <div class="compound" id="row_cov_prislusenstvi" style="display:none">
           <label>Příslušenství ČOV</label>
+          <div id="cov_prislusenstvi_rows">
+          <div class="accessory-row">
           <div class="compound-row with-confirm">
             <div class="compound-sub">
               <label>Typ položky</label>
@@ -497,11 +506,11 @@
               <label>Množství</label>
               <input type="number" name="qty_cov_prislusenstvi" min="1" step="1" placeholder="1">
             </div>
-            <div class="compound-sub" id="cov_prislusenstvi_price_wrap">
+            <div class="compound-sub accessory-price">
               <label>Cena / ks (bez DPH)</label>
               <input type="number" name="price_cov_prislusenstvi" min="0" step="100" placeholder="Kč">
             </div>
-            <div class="compound-sub" id="cov_prislusenstvi_confirm_wrap">
+            <div class="compound-sub accessory-confirm">
               <label>Potvrzení</label>
               <select name="confirm_cov_prislusenstvi">
                 <option value="">—</option>
@@ -509,7 +518,11 @@
               </select>
             </div>
           </div>
-          <div class="hint">Nabídka se filtruje podle zvoleného typu ČOV. Množství výchozí 1 ks. Cenu a potvrzení TP vyplňuj jen u položky „Jiné — ruční cena“.</div>
+          <div class="accessory-remove-wrap" style="display:none"><button type="button" class="btn-danger accessory-remove-btn" onclick="removeAccessoryRow(this)">× Odebrat</button></div>
+          </div>
+          </div>
+          <button type="button" class="btn-add-accessory" onclick="addAccessoryRow('cov_prislusenstvi')">+ Přidat další příslušenství</button>
+          <div class="hint">Nabídka se filtruje podle zvoleného typu ČOV. Můžeš přidat víc kusů (např. 1× Modbus + 1× GSM). Množství výchozí 1 ks. Cenu a potvrzení TP vyplňuj jen u položky „Jiné — ruční cena“.</div>
         </div>
 
         <div class="frow">
@@ -638,6 +651,8 @@
         <!-- Příslušenství nádrže -->
         <div class="compound" id="row_nadrz_prislusenstvi" style="display:none">
           <label>Příslušenství nádrže</label>
+          <div id="nadrz_prislusenstvi_rows">
+          <div class="accessory-row">
           <div class="compound-row with-confirm">
             <div class="compound-sub">
               <label>Typ položky</label>
@@ -650,11 +665,11 @@
               <label>Množství</label>
               <input type="number" name="qty_nadrz_prislusenstvi" min="1" step="1" placeholder="ks">
             </div>
-            <div class="compound-sub">
+            <div class="compound-sub accessory-price">
               <label>Cena / ks (bez DPH)</label>
               <input type="number" name="price_nadrz_prislusenstvi" min="0" step="100" placeholder="Kč">
             </div>
-            <div class="compound-sub">
+            <div class="compound-sub accessory-confirm">
               <label>Potvrzení</label>
               <select name="confirm_nadrz_prislusenstvi">
                 <option value="">—</option>
@@ -662,7 +677,11 @@
               </select>
             </div>
           </div>
-          <div class="hint">Čerpadlo, filtr, plavákový spínač apod.</div>
+          <div class="accessory-remove-wrap" style="display:none"><button type="button" class="btn-danger accessory-remove-btn" onclick="removeAccessoryRow(this)">× Odebrat</button></div>
+          </div>
+          </div>
+          <button type="button" class="btn-add-accessory" onclick="addAccessoryRow('nadrz_prislusenstvi')">+ Přidat další příslušenství</button>
+          <div class="hint">Čerpadlo, filtr, plavákový spínač apod. Můžeš přidat víc kusů.</div>
         </div>
 
         <!-- Geiger prosvod dešťové vody -->
@@ -1164,39 +1183,87 @@
   // Nabídne jen příslušenství kompatibilní se zvolenou značkou ČOV (položky bez
   // data-brand jsou univerzální, nabízí se vždy). Když už vybraná položka přestane
   // sedět (změna typu ČOV), výběr se zruší, ať nezůstane skrytá neplatná volba.
+  // Projede VŠECHNY řádky příslušenství (item_cov_prislusenstvi, _2, _3…).
   window.filterCovAccessoryOptions = function() {
-    var sel = form.querySelector('[name="item_cov_prislusenstvi"]');
-    if (!sel) return;
     var brand = covBrand(document.getElementById('f_typ_cov').value);
-    var currentValue = sel.value;
-    var currentStillValid = true;
-    Array.prototype.forEach.call(sel.querySelectorAll('option'), function(opt) {
-      var optBrand = opt.getAttribute('data-brand');
-      var visible = !optBrand || optBrand === brand;
-      opt.hidden = !visible;
-      if (opt.value === currentValue && opt.value !== '' && !visible) currentStillValid = false;
+    var sels = form.querySelectorAll('select[name^="item_cov_prislusenstvi"]');
+    Array.prototype.forEach.call(sels, function(sel) {
+      var currentValue = sel.value;
+      var currentStillValid = true;
+      Array.prototype.forEach.call(sel.querySelectorAll('option'), function(opt) {
+        var optBrand = opt.getAttribute('data-brand');
+        var visible = !optBrand || optBrand === brand;
+        opt.hidden = !visible;
+        if (opt.value === currentValue && opt.value !== '' && !visible) currentStillValid = false;
+      });
+      Array.prototype.forEach.call(sel.querySelectorAll('optgroup'), function(group) {
+        var opts = group.querySelectorAll('option');
+        group.hidden = !Array.prototype.some.call(opts, function(o) { return !o.hidden; });
+      });
+      if (!currentStillValid) {
+        sel.value = '';
+        onCovPrislusenstviChange(sel);
+      }
     });
-    Array.prototype.forEach.call(sel.querySelectorAll('optgroup'), function(group) {
-      var opts = group.querySelectorAll('option');
-      group.hidden = !Array.prototype.some.call(opts, function(o) { return !o.hidden; });
-    });
-    if (!currentStillValid) {
-      sel.value = '';
-      onCovPrislusenstviChange(sel);
-    }
   };
 
   // Cena/ks a potvrzení TP dávají smysl jen u ruční položky (COV-PRISLUSENSTVI-MANUAL,
   // data-manual="1") — katalogové položky mají cenu i potvrzení vyřešené v ceníku.
+  // Pracuje relativně k řádku (sel.closest), aby fungovalo pro všechny přidané kusy.
   window.onCovPrislusenstviChange = function(sel) {
     var opt = sel.options[sel.selectedIndex];
     var isManual = !!(opt && opt.getAttribute('data-manual') === '1');
-    var priceWrap = document.getElementById('cov_prislusenstvi_price_wrap');
-    var confirmWrap = document.getElementById('cov_prislusenstvi_confirm_wrap');
+    var row = sel.closest('.compound-row');
+    var priceWrap = row ? row.querySelector('.accessory-price') : null;
+    var confirmWrap = row ? row.querySelector('.accessory-confirm') : null;
     var hideExtras = !!sel.value && !isManual;
     if (priceWrap) priceWrap.style.display = hideExtras ? 'none' : '';
     if (confirmWrap) confirmWrap.style.display = hideExtras ? 'none' : '';
     onCompoundItem(sel, 'cov_prislusenstvi');
+  };
+
+  // ── Opakovatelné příslušenství (víc kusů) ─────────────────
+  // Backend čte VŠECHNY klíče item_<kategorie>_* (selected() v catalogSelectionService.ts),
+  // takže stačí přidat další řádky s příponou _2, _3… (item/qty/price/confirm).
+  var accessorySeq = { cov_prislusenstvi: 1, nadrz_prislusenstvi: 1 };
+
+  window.addAccessoryRow = function(prefix, forceSuffix) {
+    var container = document.getElementById(prefix + '_rows');
+    if (!container) return null;
+    var template = container.querySelector('.accessory-row');
+    if (!template) return null;
+    var clone = template.cloneNode(true);
+    var suffix;
+    if (forceSuffix !== undefined && forceSuffix !== null) {
+      suffix = forceSuffix;
+      if (forceSuffix > accessorySeq[prefix]) accessorySeq[prefix] = forceSuffix;
+    } else {
+      accessorySeq[prefix] += 1;
+      suffix = accessorySeq[prefix];
+    }
+    var suf = '_' + suffix;
+    // přejmenuj a vyresetuj všechna pojmenovaná pole v klonu
+    Array.prototype.forEach.call(clone.querySelectorAll('[name]'), function(el) {
+      el.setAttribute('name', el.getAttribute('name') + suf);
+      el.value = '';
+    });
+    var removeWrap = clone.querySelector('.accessory-remove-wrap');
+    if (removeWrap) removeWrap.style.display = '';
+    container.appendChild(clone);
+    // ČOV: aplikuj filtr značky + viditelnost ceny/potvrzení pro nový select
+    if (prefix === 'cov_prislusenstvi') {
+      filterCovAccessoryOptions();
+      var sel = clone.querySelector('select[name^="item_cov_prislusenstvi"]');
+      if (sel) onCovPrislusenstviChange(sel);
+    }
+    saveToLocalStorage();
+    return clone;
+  };
+
+  window.removeAccessoryRow = function(btn) {
+    var row = btn.closest('.accessory-row');
+    if (row) row.remove();
+    saveToLocalStorage();
   };
 
   // Septik i pískový filtr: katalogové položky (z e-shop feedu) mají cenu v ceníku,
@@ -1262,10 +1329,26 @@
         if (!el) continue;
         el.value = data[name] === null ? '' : String(data[name]);
       }
+      // Znovu vytvoř dynamické řádky příslušenství (item_<prefix>_N vznikají až tady,
+      // teprve pak existují jejich <input> pro nastavení hodnot v 2. průchodu).
+      ['cov_prislusenstvi', 'nadrz_prislusenstvi'].forEach(function(prefix) {
+        var suffixes = [];
+        var re = new RegExp('^item_' + prefix + '_(\\d+)$');
+        for (var nm in data) { var mm = nm.match(re); if (mm) suffixes.push(Number(mm[1])); }
+        suffixes.sort(function(a, b) { return a - b; });
+        suffixes.forEach(function(s) { addAccessoryRow(prefix, s); });
+      });
+      for (var nm2 in data) {
+        if (/^(item|qty|price|confirm)_(cov|nadrz)_prislusenstvi_\d+$/.test(nm2)) {
+          var el2 = form.querySelector('[name="' + nm2 + '"]');
+          if (el2) el2.value = data[nm2] === null ? '' : String(data[nm2]);
+        }
+      }
       // Trigger visibility updates
       onCovChange();
-      var covPrislSel = form.querySelector('[name="item_cov_prislusenstvi"]');
-      if (covPrislSel) onCovPrislusenstviChange(covPrislSel);
+      Array.prototype.forEach.call(form.querySelectorAll('select[name^="item_cov_prislusenstvi"]'), function(sel) {
+        onCovPrislusenstviChange(sel);
+      });
       var septikSel = form.querySelector('[name="item_septik_septik"]');
       if (septikSel) onSeptikItemChange(septikSel, 'septik');
       var septikFiltrSel = form.querySelector('[name="item_septik_filtr"]');
