@@ -159,6 +159,15 @@
     .btn-add-accessory { margin-top: 2px; padding: 5px 10px; font-size: 12px; background: var(--surface); color: var(--text); border-color: var(--border-strong); }
     .btn-add-accessory:hover:not(:disabled) { background: var(--bg); }
 
+    /* Vlastní poznámky per kategorie */
+    .custom-notes { margin-top: 12px; padding-top: 9px; border-top: 1px dashed var(--border); }
+    .custom-notes > label { font-size: 10px; color: var(--text-faint); font-weight: 600; text-transform: uppercase; letter-spacing: .02em; display: block; margin-bottom: 5px; }
+    .note-row { display: flex; gap: 6px; margin-bottom: 5px; align-items: center; }
+    .note-row input { flex: 1; }
+    .note-remove-btn { flex-shrink: 0; padding: 4px 9px; font-size: 12px; }
+    .btn-add-note { margin-top: 2px; padding: 4px 10px; font-size: 12px; background: var(--surface); color: var(--text); border-color: var(--border-strong); }
+    .btn-add-note:hover:not(:disabled) { background: var(--bg); }
+
     /* Result card */
     .result-card {
       display: none; padding: 12px;
@@ -545,6 +554,11 @@
             <input type="number" id="f_delka_rozvodu_cov" name="delka_rozvodu_cov" min="0" step="1" placeholder="0">
           </div>
         </div>
+        <div class="custom-notes">
+          <label>Vlastní poznámky (Pozn.)</label>
+          <div id="notes_cov_rows"></div>
+          <button type="button" class="btn-add-note" onclick="addNoteRow('cov')">+ Přidat poznámku</button>
+        </div>
       </div>
     </div>
 
@@ -724,6 +738,11 @@
             <input type="number" id="f_delka_rozvodu_nadrz" name="delka_rozvodu_nadrz" min="0" step="1" placeholder="0">
           </div>
         </div>
+        <div class="custom-notes">
+          <label>Vlastní poznámky (Pozn.)</label>
+          <div id="notes_nadrz_rows"></div>
+          <button type="button" class="btn-add-note" onclick="addNoteRow('nadrz')">+ Přidat poznámku</button>
+        </div>
       </div>
     </div>
 
@@ -815,6 +834,11 @@
               </select>
             </div>
           </div>
+        </div>
+        <div class="custom-notes">
+          <label>Vlastní poznámky (Pozn.)</label>
+          <div id="notes_vsak_rows"></div>
+          <button type="button" class="btn-add-note" onclick="addNoteRow('vsak')">+ Přidat poznámku</button>
         </div>
       </div>
     </div>
@@ -912,6 +936,11 @@
             <input type="number" id="f_delka_rozvodu_septik" name="delka_rozvodu_septik" min="0" step="1" placeholder="0">
           </div>
         </div>
+        <div class="custom-notes">
+          <label>Vlastní poznámky (Pozn.)</label>
+          <div id="notes_septik_rows"></div>
+          <button type="button" class="btn-add-note" onclick="addNoteRow('septik')">+ Přidat poznámku</button>
+        </div>
       </div>
     </div>
 
@@ -987,6 +1016,11 @@
             </div>
           </div>
         </div>
+        <div class="custom-notes">
+          <label>Vlastní poznámky (Pozn.)</label>
+          <div id="notes_zemina_rows"></div>
+          <button type="button" class="btn-add-note" onclick="addNoteRow('zemina')">+ Přidat poznámku</button>
+        </div>
       </div>
     </div>
 
@@ -1046,6 +1080,11 @@
               <input type="number" name="price_obchod_admin" min="0" step="500" placeholder="Kč">
             </div>
           </div>
+        </div>
+        <div class="custom-notes">
+          <label>Vlastní poznámky (Pozn.)</label>
+          <div id="notes_obchod_rows"></div>
+          <button type="button" class="btn-add-note" onclick="addNoteRow('obchod')">+ Přidat poznámku</button>
         </div>
       </div>
     </div>
@@ -1266,6 +1305,41 @@
     saveToLocalStorage();
   };
 
+  // ── Vlastní poznámky per kategorie ────────────────────────
+  // Každá poznámka = textový input pojmenovaný pozn_<key>_<N>. Backend
+  // (customNotes v catalogSelectionService.ts) je připojí k poznámkám sekce.
+  var noteSeq = { cov: 0, nadrz: 0, vsak: 0, septik: 0, zemina: 0, obchod: 0 };
+
+  window.addNoteRow = function(key, forceN, value) {
+    var container = document.getElementById('notes_' + key + '_rows');
+    if (!container) return null;
+    var n;
+    if (forceN !== undefined && forceN !== null) {
+      n = forceN;
+      if (forceN > noteSeq[key]) noteSeq[key] = forceN;
+    } else {
+      noteSeq[key] += 1;
+      n = noteSeq[key];
+    }
+    var row = document.createElement('div');
+    row.className = 'note-row';
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.name = 'pozn_' + key + '_' + n;
+    input.placeholder = 'Text poznámky…';
+    if (value) input.value = value;
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn-danger note-remove-btn';
+    btn.textContent = '×';
+    btn.addEventListener('click', function() { row.remove(); saveToLocalStorage(); });
+    row.appendChild(input);
+    row.appendChild(btn);
+    container.appendChild(row);
+    saveToLocalStorage();
+    return row;
+  };
+
   // Septik i pískový filtr: katalogové položky (z e-shop feedu) mají cenu v ceníku,
   // ruční pole „Cena" má smysl jen u volby „Jiný — ruční cena" (data-manual="1").
   window.onSeptikItemChange = function(sel, part) {
@@ -1344,6 +1418,14 @@
           if (el2) el2.value = data[nm2] === null ? '' : String(data[nm2]);
         }
       }
+      // Znovu vytvoř vlastní poznámky (pozn_<key>_N) s hodnotami.
+      ['cov', 'nadrz', 'vsak', 'septik', 'zemina', 'obchod'].forEach(function(key) {
+        var reN = new RegExp('^pozn_' + key + '_(\\d+)$');
+        var found = [];
+        for (var nm3 in data) { var mn = nm3.match(reN); if (mn) found.push({ n: Number(mn[1]), v: data[nm3] }); }
+        found.sort(function(a, b) { return a.n - b.n; });
+        found.forEach(function(f) { addNoteRow(key, f.n, f.v === null ? '' : String(f.v)); });
+      });
       // Trigger visibility updates
       onCovChange();
       Array.prototype.forEach.call(form.querySelectorAll('select[name^="item_cov_prislusenstvi"]'), function(sel) {
