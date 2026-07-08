@@ -813,37 +813,61 @@
           <div class="compound-row">
             <div class="compound-sub">
               <label>Typ</label>
-              <select name="item_septik_septik">
+              <select name="item_septik_septik" onchange="onSeptikItemChange(this,'septik')">
                 <option value="">— bez septiku —</option>
-                <option value="SEPTIK-MANUAL">Septik – dle výrobku</option>
+                <optgroup label="Plastový septik SSK">
+                  <option value="SEPTIK-SSK-3">3 m³ — 22 100 Kč</option>
+                  <option value="SEPTIK-SSK-4">4 m³ — 23 950 Kč</option>
+                  <option value="SEPTIK-SSK-5">5 m³ — 26 200 Kč</option>
+                  <option value="SEPTIK-SSK-6">6 m³ — 27 700 Kč</option>
+                  <option value="SEPTIK-SSK-7">7 m³ — 31 950 Kč</option>
+                  <option value="SEPTIK-SSK-8">8 m³ — 33 250 Kč</option>
+                  <option value="SEPTIK-SSK-9">9 m³ — 36 700 Kč</option>
+                  <option value="SEPTIK-SSK-10">10 m³ — 37 600 Kč</option>
+                  <option value="SEPTIK-SSK-12">12 m³ — 40 200 Kč</option>
+                  <option value="SEPTIK-SSK-15">15 m³ — 44 700 Kč</option>
+                  <option value="SEPTIK-SSK-18">18 m³ — 74 000 Kč</option>
+                  <option value="SEPTIK-SSK-20">20 m³ — 81 950 Kč</option>
+                </optgroup>
+                <optgroup label="Dvouplášťový septik">
+                  <option value="SEPTIK-DVOUPLASTOVY-3">kruhový 3 m³ — 27 273 Kč</option>
+                </optgroup>
+                <option value="SEPTIK-MANUAL" data-manual="1">Jiný — ruční cena</option>
               </select>
             </div>
             <div class="compound-sub">
-              <label>Množství <span class="key" style="display:inline">qty_septik_septik</span></label>
-              <input type="number" name="qty_septik_septik" min="1" step="1" placeholder="ks">
+              <label>Množství</label>
+              <input type="number" name="qty_septik_septik" min="1" step="1" placeholder="1">
             </div>
-            <div class="compound-sub">
-              <label>Cena bez DPH <span class="key" style="display:inline">price_septik_septik</span></label>
+            <div class="compound-sub" id="septik_septik_price_wrap">
+              <label>Cena bez DPH</label>
               <input type="number" name="price_septik_septik" min="0" step="100" placeholder="Kč">
             </div>
           </div>
+          <div class="hint">Cenu vyplňuj jen u položky „Jiný — ruční cena". Katalogové septiky mají cenu z ceníku (denně aktualizovanou z e-shopu).</div>
         </div>
         <div class="compound">
           <label>Pískový filtr</label>
           <div class="compound-row">
             <div class="compound-sub">
               <label>Typ</label>
-              <select name="item_septik_filtr">
+              <select name="item_septik_filtr" onchange="onSeptikItemChange(this,'filtr')">
                 <option value="">— bez filtru —</option>
-                <option value="SEPTIK-PISKOVY-FILTR-MANUAL">Pískový filtr – dle projektu</option>
+                <optgroup label="Zemní pískový filtr ZPF">
+                  <option value="SEPTIK-PISKOVY-FILTR-ZPF-3-5">typ 3-5 — 21 000 Kč</option>
+                  <option value="SEPTIK-PISKOVY-FILTR-ZPF-6-9">typ 6-9 — 24 700 Kč</option>
+                  <option value="SEPTIK-PISKOVY-FILTR-ZPF-10-14">typ 10-14 — 32 000 Kč</option>
+                  <option value="SEPTIK-PISKOVY-FILTR-ZPF-15-17">typ 15-17 — 36 500 Kč</option>
+                </optgroup>
+                <option value="SEPTIK-PISKOVY-FILTR-MANUAL" data-manual="1">Jiný — dle projektu (ruční cena)</option>
               </select>
             </div>
             <div class="compound-sub">
-              <label>Množství <span class="key" style="display:inline">qty_septik_filtr</span></label>
-              <input type="number" name="qty_septik_filtr" min="1" step="1" placeholder="kpl">
+              <label>Množství</label>
+              <input type="number" name="qty_septik_filtr" min="1" step="1" placeholder="1">
             </div>
-            <div class="compound-sub">
-              <label>Cena bez DPH <span class="key" style="display:inline">price_septik_filtr</span></label>
+            <div class="compound-sub" id="septik_filtr_price_wrap">
+              <label>Cena bez DPH</label>
               <input type="number" name="price_septik_filtr" min="0" step="100" placeholder="Kč">
             </div>
           </div>
@@ -1175,6 +1199,17 @@
     onCompoundItem(sel, 'cov_prislusenstvi');
   };
 
+  // Septik i pískový filtr: katalogové položky (z e-shop feedu) mají cenu v ceníku,
+  // ruční pole „Cena" má smysl jen u volby „Jiný — ruční cena" (data-manual="1").
+  window.onSeptikItemChange = function(sel, part) {
+    var opt = sel.options[sel.selectedIndex];
+    var isManual = !!(opt && opt.getAttribute('data-manual') === '1');
+    var priceWrap = document.getElementById('septik_' + part + '_price_wrap');
+    var hidePrice = !!sel.value && !isManual;
+    if (priceWrap) priceWrap.style.display = hidePrice ? 'none' : '';
+    onCompoundItem(sel, 'septik_' + part);
+  };
+
   window.onNadrzChange = function() {
     var hasNadrz = !!document.getElementById('f_typ_nadrze').value;
     ['row_pocet_nadrzi','row_zalozeni_nadrze','row_nadrz_prislusenstvi','row_nadrz_geiger'].forEach(function(id) {
@@ -1231,6 +1266,10 @@
       onCovChange();
       var covPrislSel = form.querySelector('[name="item_cov_prislusenstvi"]');
       if (covPrislSel) onCovPrislusenstviChange(covPrislSel);
+      var septikSel = form.querySelector('[name="item_septik_septik"]');
+      if (septikSel) onSeptikItemChange(septikSel, 'septik');
+      var septikFiltrSel = form.querySelector('[name="item_septik_filtr"]');
+      if (septikFiltrSel) onSeptikItemChange(septikFiltrSel, 'filtr');
       onNadrzChange();
       onVsakItemChange();
       // rezie_podil_* řádky vznikají až tady (refreshRezieSplitRows čte typ_cov
