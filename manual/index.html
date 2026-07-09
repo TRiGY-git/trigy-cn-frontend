@@ -170,6 +170,16 @@
     .notes-cols { display: flex; gap: 16px; flex-wrap: wrap; }
     .notes-col { flex: 1; min-width: 220px; }
     .notes-col-title { font-size: 11px; font-weight: 600; color: var(--text); margin-bottom: 5px; }
+    /* Vlastní položky (příplatky) per kategorie */
+    .custom-items { margin-top: 12px; padding-top: 9px; border-top: 1px dashed var(--border); }
+    .custom-items > label { font-size: 10px; color: var(--text-faint); font-weight: 600; text-transform: uppercase; letter-spacing: .02em; display: block; margin-bottom: 5px; }
+    .item-row { display: flex; gap: 6px; margin-bottom: 6px; align-items: center; flex-wrap: wrap; }
+    .item-row .item-cena { width: 110px; flex-shrink: 0; }
+    .item-row .item-popis { flex: 1; min-width: 160px; }
+    .item-row .item-vpdf { width: 130px; flex-shrink: 0; }
+    .item-remove-btn { flex-shrink: 0; padding: 4px 9px; font-size: 12px; }
+    .btn-add-item { margin-top: 2px; padding: 4px 10px; font-size: 12px; background: var(--surface); color: var(--text); border-color: var(--border-strong); }
+    .btn-add-item:hover:not(:disabled) { background: var(--bg); }
 
     /* Result card */
     .result-card {
@@ -572,6 +582,11 @@
             </div>
           </div>
         </div>
+        <div class="custom-items">
+          <label>Vlastní položky (příplatky)</label>
+          <div id="items_cov_rows"></div>
+          <button type="button" class="btn-add-item" onclick="addItemRow('cov')">+ Přidat položku</button>
+        </div>
       </div>
     </div>
 
@@ -817,6 +832,11 @@
             </div>
           </div>
         </div>
+        <div class="custom-items">
+          <label>Vlastní položky (příplatky)</label>
+          <div id="items_nadrz_rows"></div>
+          <button type="button" class="btn-add-item" onclick="addItemRow('nadrz')">+ Přidat položku</button>
+        </div>
       </div>
     </div>
 
@@ -914,6 +934,11 @@
           <div class="notes-col-title">K realizaci</div>
           <div id="notes_vsak_rows"></div>
           <button type="button" class="btn-add-note" onclick="addNoteRow('vsak')">+ Přidat poznámku</button>
+        </div>
+        <div class="custom-items">
+          <label>Vlastní položky (příplatky)</label>
+          <div id="items_vsak_rows"></div>
+          <button type="button" class="btn-add-item" onclick="addItemRow('vsak')">+ Přidat položku</button>
         </div>
       </div>
     </div>
@@ -1026,6 +1051,11 @@
             </div>
           </div>
         </div>
+        <div class="custom-items">
+          <label>Vlastní položky (příplatky)</label>
+          <div id="items_septik_rows"></div>
+          <button type="button" class="btn-add-item" onclick="addItemRow('septik')">+ Přidat položku</button>
+        </div>
       </div>
     </div>
 
@@ -1107,6 +1137,11 @@
           <div id="notes_zemina_rows"></div>
           <button type="button" class="btn-add-note" onclick="addNoteRow('zemina')">+ Přidat poznámku</button>
         </div>
+        <div class="custom-items">
+          <label>Vlastní položky (příplatky)</label>
+          <div id="items_zemina_rows"></div>
+          <button type="button" class="btn-add-item" onclick="addItemRow('zemina')">+ Přidat položku</button>
+        </div>
       </div>
     </div>
 
@@ -1172,6 +1207,11 @@
           <div class="notes-col-title">K realizaci</div>
           <div id="notes_obchod_rows"></div>
           <button type="button" class="btn-add-note" onclick="addNoteRow('obchod')">+ Přidat poznámku</button>
+        </div>
+        <div class="custom-items">
+          <label>Vlastní položky (příplatky)</label>
+          <div id="items_obchod_rows"></div>
+          <button type="button" class="btn-add-item" onclick="addItemRow('obchod')">+ Přidat položku</button>
         </div>
       </div>
     </div>
@@ -1484,6 +1524,61 @@
     return row;
   };
 
+  // ── Vlastní položky (příplatky) per kategorie ─────────────
+  // Každá položka = příplatek (polozka_<key>_<N>_cena), popisek do PDF
+  // (polozka_<key>_<N>_popis) a přepínač zobrazení popisku (polozka_<key>_<N>_vpdf).
+  // Backend (customItems v catalogSelectionService.ts) je přidá jako řádky sekce
+  // (příplatek 1:1 bez marže); bez „Ano" ve vpdf je řádek skrytý z PDF.
+  var itemSeq = { cov: 0, nadrz: 0, vsak: 0, septik: 0, zemina: 0, obchod: 0 };
+
+  window.addItemRow = function(key, forceN, values) {
+    var container = document.getElementById('items_' + key + '_rows');
+    if (!container) return null;
+    if (itemSeq[key] === undefined) itemSeq[key] = 0;
+    var n;
+    if (forceN !== undefined && forceN !== null) {
+      n = forceN;
+      if (forceN > itemSeq[key]) itemSeq[key] = forceN;
+    } else {
+      itemSeq[key] += 1;
+      n = itemSeq[key];
+    }
+    var v = values || {};
+    var base = 'polozka_' + key + '_' + n + '_';
+    var row = document.createElement('div');
+    row.className = 'item-row';
+
+    var cena = document.createElement('input');
+    cena.type = 'number'; cena.min = '0'; cena.step = '100';
+    cena.className = 'item-cena'; cena.name = base + 'cena';
+    cena.placeholder = 'Příplatek Kč';
+    if (v.cena) cena.value = v.cena;
+
+    var popis = document.createElement('input');
+    popis.type = 'text'; popis.className = 'item-popis'; popis.name = base + 'popis';
+    popis.placeholder = 'Popisek do PDF…';
+    if (v.popis) popis.value = v.popis;
+
+    var vpdf = document.createElement('select');
+    vpdf.className = 'item-vpdf'; vpdf.name = base + 'vpdf';
+    var o0 = document.createElement('option'); o0.value = ''; o0.textContent = 'Skrýt v PDF';
+    var o1 = document.createElement('option'); o1.value = 'ano'; o1.textContent = 'Zobrazit v PDF';
+    vpdf.appendChild(o0); vpdf.appendChild(o1);
+    if (v.vpdf === 'ano') vpdf.value = 'ano';
+
+    var btn = document.createElement('button');
+    btn.type = 'button'; btn.className = 'btn-danger item-remove-btn'; btn.textContent = '×';
+    btn.addEventListener('click', function() { row.remove(); saveToLocalStorage(); });
+
+    row.appendChild(cena);
+    row.appendChild(popis);
+    row.appendChild(vpdf);
+    row.appendChild(btn);
+    container.appendChild(row);
+    saveToLocalStorage();
+    return row;
+  };
+
   // Septik i pískový filtr: katalogové položky (z e-shop feedu) mají cenu v ceníku,
   // ruční pole „Cena" má smysl jen u volby „Jiný — ruční cena" (data-manual="1").
   window.onSeptikItemChange = function(sel, part) {
@@ -1573,6 +1668,21 @@
         for (var nm3 in data) { var mn = nm3.match(reN); if (mn) found.push({ n: Number(mn[1]), v: data[nm3] }); }
         found.sort(function(a, b) { return a.n - b.n; });
         found.forEach(function(f) { addNoteRow(key, f.n, f.v === null ? '' : String(f.v)); });
+      });
+      // Znovu vytvoř vlastní položky (polozka_<key>_N_*) s hodnotami.
+      ['cov', 'nadrz', 'vsak', 'septik', 'zemina', 'obchod'].forEach(function(key) {
+        var reN = new RegExp('^polozka_' + key + '_(\\d+)_(cena|popis|vpdf)$');
+        var byN = {};
+        for (var nm in data) {
+          var mm = nm.match(reN);
+          if (!mm) continue;
+          var n = Number(mm[1]);
+          byN[n] = byN[n] || {};
+          byN[n][mm[2]] = data[nm] === null ? '' : String(data[nm]);
+        }
+        Object.keys(byN).map(Number).sort(function(a, b) { return a - b; }).forEach(function(n) {
+          addItemRow(key, n, byN[n]);
+        });
       });
       // Trigger visibility updates
       onCovChange();
