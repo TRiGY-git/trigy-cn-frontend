@@ -353,6 +353,25 @@
     .cenik-cinnost-body { display: none; padding: 6px 0 2px; }
     .cenik-cinnost.open > .cenik-cinnost-body { display: block; }
 
+    /* + Přidat produkt */
+    .cenik-add-wrap { margin-top: 8px; }
+    .cenik-add-toggle {
+      background: #fff; color: #79489c; border: 1px dashed #b79ccf;
+      border-radius: 6px; padding: 5px 10px; font-size: 12px; font-weight: 600; cursor: pointer;
+    }
+    .cenik-add-toggle:hover { background: #f7f2fb; }
+    .cenik-add-form { margin-top: 8px; padding: 10px; border: 1px solid #e2d6ee; border-radius: 8px; background: #faf7fd; }
+    .cenik-add-grid { display: grid; grid-template-columns: 2fr 70px 1fr 90px 1fr; gap: 8px; }
+    .cenik-add-grid label { display: flex; flex-direction: column; font-size: 10px; font-weight: 600; color: #666; gap: 3px; }
+    .cenik-add-grid input, .cenik-add-grid select {
+      font-size: 12px; padding: 5px 6px; border: 1px solid #ccc; border-radius: 5px; font-weight: 400; color: #222;
+    }
+    .cenik-add-actions { margin-top: 8px; display: flex; gap: 8px; }
+    .cenik-add-submit { background: #79489c; color: #fff; border: none; border-radius: 6px; padding: 5px 14px; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .cenik-add-submit:disabled { background: #b0b0b0; cursor: not-allowed; }
+    .cenik-add-cancel { background: #fff; color: #555; border: 1px solid #ccc; border-radius: 6px; padding: 5px 12px; font-size: 12px; cursor: pointer; }
+    @media (max-width: 640px) { .cenik-add-grid { grid-template-columns: 1fr 1fr; } }
+
     .cenik-table-wrap { overflow-x: auto; }
     .cenik-table { width: 100%; border-collapse: collapse; font-size: 11px; }
     .cenik-table th {
@@ -1275,6 +1294,42 @@
           body.appendChild(wrap);
         }
 
+        // ── + Přidat produkt do této podkategorie ──────────────────────────
+        var addWrap = document.createElement('div');
+        addWrap.className = 'cenik-add-wrap';
+        var addBtn = document.createElement('button');
+        addBtn.type = 'button';
+        addBtn.className = 'cenik-add-toggle';
+        addBtn.textContent = '+ Přidat produkt';
+        var form = document.createElement('form');
+        form.className = 'cenik-add-form';
+        form.style.display = 'none';
+        form.innerHTML =
+          '<div class="cenik-add-grid">' +
+            '<label>Název<input type="text" class="ca-name" maxlength="500" required></label>' +
+            '<label>MJ<input type="text" class="ca-unit" value="ks" maxlength="32"></label>' +
+            '<label>Cena / MJ (bez DPH)<input type="number" class="ca-price" min="0" step="1" required></label>' +
+            '<label>DPH<select class="ca-vat"><option value="0.21">21 %</option><option value="0.12">12 %</option><option value="0">0 %</option></select></label>' +
+            '<label>Nákupní cena (nepovinné)<input type="number" class="ca-purchase" min="0" step="1"></label>' +
+          '</div>' +
+          '<div class="cenik-add-actions">' +
+            '<button type="submit" class="cenik-add-submit">Přidat</button>' +
+            '<button type="button" class="cenik-add-cancel">Zrušit</button>' +
+          '</div>';
+        addBtn.addEventListener('click', function () {
+          var open = form.style.display === 'none';
+          form.style.display = open ? '' : 'none';
+          if (open) form.querySelector('.ca-name').focus();
+        });
+        form.querySelector('.cenik-add-cancel').addEventListener('click', function () {
+          form.reset();
+          form.style.display = 'none';
+        });
+        form.addEventListener('submit', function (e) { createProduct(e, kat, cin, form); });
+        addWrap.appendChild(addBtn);
+        addWrap.appendChild(form);
+        body.appendChild(addWrap);
+
         header.addEventListener('click', function () {
           div.classList.toggle('open');
         });
@@ -1382,6 +1437,39 @@
           showCenikToast('Chyba: ' + err.message, 'error');
         } finally {
           loading.style.display = 'none';
+        }
+      }
+
+      // ── Přidání nového produktu do podkategorie ────────────────────────────
+      async function createProduct(event, kat, cin, form) {
+        event.preventDefault();
+        var name = form.querySelector('.ca-name').value.trim();
+        var unit = form.querySelector('.ca-unit').value.trim() || 'ks';
+        var price = Number(form.querySelector('.ca-price').value);
+        var vat = Number(form.querySelector('.ca-vat').value);
+        var purchaseRaw = form.querySelector('.ca-purchase').value.trim();
+        var purchase = purchaseRaw === '' ? null : Number(purchaseRaw);
+        if (!name) { showCenikToast('Zadejte název produktu.', 'error'); return; }
+        if (!Number.isFinite(price) || price < 0) { showCenikToast('Zadejte platnou cenu (≥ 0).', 'error'); return; }
+        if (purchase !== null && (!Number.isFinite(purchase) || purchase < 0)) {
+          showCenikToast('Nákupní cena musí být nezáporné číslo.', 'error'); return;
+        }
+        var submitBtn = form.querySelector('.cenik-add-submit');
+        submitBtn.disabled = true;
+        try {
+          var res = await cenikApiFetch('/admin/price-items', {
+            method: 'POST',
+            body: JSON.stringify({
+              name: name, unit: unit, unitPrice: price, vatRate: vat,
+              kategorie: kat, cinnost: cin, purchasePrice: purchase,
+            }),
+          });
+          if (!res.ok) throw new Error(res.error ? JSON.stringify(res.error) : 'Přidání selhalo');
+          showCenikToast('Přidán produkt ' + res.code + ' (verze ceníku ' + res.published.version_no + ').', 'success');
+          await loadCenik();
+        } catch (err) {
+          submitBtn.disabled = false;
+          showCenikToast('Chyba přidání: ' + err.message, 'error');
         }
       }
 
