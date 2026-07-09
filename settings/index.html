@@ -318,6 +318,12 @@
     .cenik-badge-count { background: #79489c; color: #fff; }
     .cenik-badge-sdilene { background: #e0e0e0; color: #555; }
     .cenik-badge-eshop { background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
+    .cenik-badge-rucni { background: #f3eef9; color: #79489c; border: 1px solid #c9b3e0; }
+    .cenik-row-actions { white-space: nowrap; }
+    .cenik-delete { margin-left: 4px; background: #fff; color: #b00020; border: 1px solid #e0a3ad; border-radius: 5px; padding: 4px 9px; font-size: 11px; cursor: pointer; }
+    .cenik-delete:hover { background: #fdecef; }
+    .cenik-delete.cenik-delete-armed { background: #b00020; color: #fff; border-color: #b00020; }
+    .cenik-rucni-toggle { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: #555; white-space: nowrap; cursor: pointer; }
     .cenik-chevron {
       font-size: 12px;
       color: #888;
@@ -577,6 +583,7 @@
         <div class="cenik-toolbar">
           <button class="btn btn-secondary" id="btn-load-cenik" type="button">Načíst / obnovit ceník</button>
           <input class="cenik-filter" id="cenik-filter" type="text" placeholder="Filtrovat podle kódu nebo názvu…" disabled />
+          <label class="cenik-rucni-toggle"><input type="checkbox" id="cenik-rucni-only"> Jen ručně přidané</label>
         </div>
         <form id="cenik-editor" class="cenik-editor" novalidate>
           <strong>Úprava položky <code id="cenik-editor-code"></code></strong>
@@ -1237,6 +1244,8 @@
         var tr = document.createElement('tr');
         tr.dataset.code = item.code.toLowerCase();
         tr.dataset.name = item.name.toLowerCase();
+        var isRucni = item.zdroj === 'rucni';
+        tr.dataset.rucni = isRucni ? '1' : '';
 
         var badges = '';
         if (item.kategorie === 'spolecne') {
@@ -1245,6 +1254,14 @@
         if (item.zdroj === 'eshop') {
           badges += '<span class="cenik-badge cenik-badge-eshop">e-shop</span>';
         }
+        if (isRucni) {
+          badges += '<span class="cenik-badge cenik-badge-rucni">ručně</span>';
+        }
+
+        var actions = '<button class="btn btn-secondary cenik-edit" type="button" data-code="' + escHtml(item.code) + '">Upravit</button>';
+        if (isRucni) {
+          actions += '<button class="btn cenik-delete" type="button" data-code="' + escHtml(item.code) + '">Smazat</button>';
+        }
 
         tr.innerHTML =
           '<td style="font-family:monospace;white-space:nowrap;font-size:10px;color:#555">' + escHtml(item.code) + '</td>' +
@@ -1252,7 +1269,7 @@
           '<td style="white-space:nowrap">' + escHtml(item.unit) + '</td>' +
           '<td class="cenik-price">' + fmtPrice(item.unitPrice) + '</td>' +
           '<td><div class="cenik-badges">' + badges + '</div></td>' +
-          '<td><button class="btn btn-secondary cenik-edit" type="button" data-code="' + escHtml(item.code) + '">Upravit</button></td>';
+          '<td class="cenik-row-actions">' + actions + '</td>';
         return tr;
       }
 
@@ -1387,9 +1404,10 @@
       // ── Filter logic ──────────────────────────────────────────────────────
       function applyFilter(q) {
         q = q.trim().toLowerCase();
+        var rucniOnly = document.getElementById('cenik-rucni-only').checked;
+        var active = !!q || rucniOnly;
         var panels = document.querySelectorAll('#cenik-tree .cenik-kategorie');
         panels.forEach(function (panel) {
-          var kat = panel.dataset.kat;
           var cinSections = panel.querySelectorAll('.cenik-cinnost');
           var panelHasAny = false;
 
@@ -1397,19 +1415,21 @@
             var rows = cs.querySelectorAll('tbody tr');
             var sectionHasAny = false;
             rows.forEach(function (tr) {
-              var match = !q || tr.dataset.code.includes(q) || tr.dataset.name.includes(q);
+              var textMatch = !q || tr.dataset.code.includes(q) || tr.dataset.name.includes(q);
+              var rucniMatch = !rucniOnly || tr.dataset.rucni === '1';
+              var match = textMatch && rucniMatch;
               tr.classList.toggle('filtered-out', !match);
               if (match) sectionHasAny = true;
             });
-            // Show/hide empty message
+            // Prázdnou hlášku (žádné položky) skryj, když je aktivní filtr.
             var emptyMsg = cs.querySelector('.cenik-empty');
             if (emptyMsg) {
-              emptyMsg.style.display = (q && !sectionHasAny) ? 'none' : '';
+              emptyMsg.style.display = (active && !sectionHasAny) ? 'none' : '';
             }
             if (sectionHasAny) panelHasAny = true;
           });
 
-          panel.style.display = (q && !panelHasAny) ? 'none' : '';
+          panel.style.display = (active && !panelHasAny) ? 'none' : '';
         });
       }
 
@@ -1469,6 +1489,17 @@
         } catch (err) {
           submitBtn.disabled = false;
           showCenikToast('Chyba přidání: ' + err.message, 'error');
+        }
+      }
+
+      async function deleteProduct(code) {
+        try {
+          var res = await cenikApiFetch('/admin/price-items/' + encodeURIComponent(code), { method: 'DELETE' });
+          if (!res.ok) throw new Error(res.error ? JSON.stringify(res.error) : 'Smazání selhalo');
+          showCenikToast('Smazán produkt ' + code + ' (verze ceníku ' + res.published.version_no + ').', 'success');
+          await loadCenik();
+        } catch (err) {
+          showCenikToast('Chyba mazání: ' + err.message, 'error');
         }
       }
 
@@ -1535,11 +1566,28 @@
       document.getElementById('cenik-filter').addEventListener('input', function () {
         applyFilter(this.value);
       });
+      document.getElementById('cenik-rucni-only').addEventListener('change', function () {
+        applyFilter(document.getElementById('cenik-filter').value);
+      });
       document.getElementById('cenik-tree').addEventListener('click', function (event) {
-        var btn = event.target.closest('.cenik-edit');
-        if (!btn) return;
-        event.stopPropagation();
-        openEditor(btn.dataset.code);
+        var editBtn = event.target.closest('.cenik-edit');
+        if (editBtn) { event.stopPropagation(); openEditor(editBtn.dataset.code); return; }
+        var delBtn = event.target.closest('.cenik-delete');
+        if (delBtn) {
+          event.stopPropagation();
+          // Dvoukrokové potvrzení (bez window.confirm — v iframu nemusí fungovat).
+          if (delBtn.dataset.armed === '1') { deleteProduct(delBtn.dataset.code); return; }
+          delBtn.dataset.armed = '1';
+          delBtn.dataset.orig = delBtn.textContent;
+          delBtn.textContent = 'Opravdu smazat?';
+          delBtn.classList.add('cenik-delete-armed');
+          setTimeout(function () {
+            if (!delBtn.isConnected) return;
+            delBtn.dataset.armed = '';
+            delBtn.textContent = delBtn.dataset.orig || 'Smazat';
+            delBtn.classList.remove('cenik-delete-armed');
+          }, 4000);
+        }
       });
       document.getElementById('cenik-editor').addEventListener('submit', publishEditor);
       document.getElementById('btn-cenik-cancel').addEventListener('click', closeEditor);
