@@ -361,7 +361,7 @@
     }
     .cenik-add-toggle:hover { background: #f7f2fb; }
     .cenik-add-form { margin-top: 8px; padding: 10px; border: 1px solid #e2d6ee; border-radius: 8px; background: #faf7fd; }
-    .cenik-add-grid { display: grid; grid-template-columns: 2fr 70px 1fr 90px 1fr; gap: 8px; }
+    .cenik-add-grid { display: grid; grid-template-columns: 2fr 70px 1fr 1fr; gap: 8px; }
     .cenik-add-grid label { display: flex; flex-direction: column; font-size: 10px; font-weight: 600; color: #666; gap: 3px; }
     .cenik-add-grid input, .cenik-add-grid select {
       font-size: 12px; padding: 5px 6px; border: 1px solid #ccc; border-radius: 5px; font-weight: 400; color: #222;
@@ -1309,7 +1309,6 @@
             '<label>Název<input type="text" class="ca-name" maxlength="500" required></label>' +
             '<label>MJ<input type="text" class="ca-unit" value="ks" maxlength="32"></label>' +
             '<label>Cena / MJ (bez DPH)<input type="number" class="ca-price" min="0" step="1" required></label>' +
-            '<label>DPH<select class="ca-vat"><option value="0.21">21 %</option><option value="0.12">12 %</option><option value="0">0 %</option></select></label>' +
             '<label>Nákupní cena (nepovinné)<input type="number" class="ca-purchase" min="0" step="1"></label>' +
           '</div>' +
           '<div class="cenik-add-actions">' +
@@ -1328,7 +1327,8 @@
         form.addEventListener('submit', function (e) { createProduct(e, kat, cin, form); });
         addWrap.appendChild(addBtn);
         addWrap.appendChild(form);
-        body.appendChild(addWrap);
+        // Tlačítko na začátek seznamu (nad tabulku/prázdnou hlášku).
+        body.insertBefore(addWrap, body.firstChild);
 
         header.addEventListener('click', function () {
           div.classList.toggle('open');
@@ -1446,7 +1446,6 @@
         var name = form.querySelector('.ca-name').value.trim();
         var unit = form.querySelector('.ca-unit').value.trim() || 'ks';
         var price = Number(form.querySelector('.ca-price').value);
-        var vat = Number(form.querySelector('.ca-vat').value);
         var purchaseRaw = form.querySelector('.ca-purchase').value.trim();
         var purchase = purchaseRaw === '' ? null : Number(purchaseRaw);
         if (!name) { showCenikToast('Zadejte název produktu.', 'error'); return; }
@@ -1460,7 +1459,7 @@
           var res = await cenikApiFetch('/admin/price-items', {
             method: 'POST',
             body: JSON.stringify({
-              name: name, unit: unit, unitPrice: price, vatRate: vat,
+              name: name, unit: unit, unitPrice: price,
               kategorie: kat, cinnost: cin, purchasePrice: purchase,
             }),
           });
