@@ -315,7 +315,7 @@
             <div class="key">vysoka_spodni_voda</div>
           </div>
           <div>
-            <select id="f_vysoka_spodni_voda" name="vysoka_spodni_voda">
+            <select id="f_vysoka_spodni_voda" name="vysoka_spodni_voda" onchange="onVysokaVodaChange()">
               <option value="">— ne / nízká —</option>
               <option value="ano">Ano — vysoká spodní voda</option>
             </select>
@@ -799,18 +799,8 @@
 
         <div class="frow" data-show-if="typ_nadrze">
           <div class="flabel">
-            <label for="f_delka_svodu_nadrz">Délka svodu nádrž (m)</label>
-            <div class="hint">Přípojka od domu k nádrži.</div>
-            <div class="key">delka_svodu_nadrz</div>
-          </div>
-          <div>
-            <input type="number" id="f_delka_svodu_nadrz" name="delka_svodu_nadrz" min="0" step="1" placeholder="0">
-          </div>
-        </div>
-        <div class="frow" data-show-if="typ_nadrze">
-          <div class="flabel">
-            <label for="f_delka_rozvodu_nadrz">Délka rozvodu nádrž (m)</label>
-            <div class="hint">Rozvod od nádrže dál (vsak/vyústění).</div>
+            <label for="f_delka_rozvodu_nadrz">Délka svodu a rozvodu nádrž (m)</label>
+            <div class="hint">Celková délka potrubí: přípojka od domu + rozvod od nádrže dál (vsak/vyústění).</div>
             <div class="key">delka_rozvodu_nadrz</div>
           </div>
           <div>
@@ -1332,7 +1322,40 @@
       var el = document.getElementById(id);
       if (el) el.style.display = hasCov ? '' : 'none';
     });
+    refreshCovZaklad(false);
     filterCovAccessoryOptions();
+    saveToLocalStorage();
+  };
+
+  // Základ ČOV dle typu + spodní vody:
+  //  - vysoká spodní voda → betonová deska + obetonování (štěrk nejde vybrat),
+  //  - bez vysoké vody: TOPAS → default štěrkový zásyp; ostatní typy → beton
+  //    (štěrk se u ne-TOPAS vůbec nenabízí).
+  // userToggledWater=true (změna pole spodní vody) přepíše hodnotu; jinak jen
+  // doplní default, když je prázdno (aby se nepřepsala uložená/ruční volba).
+  window.refreshCovZaklad = function(userToggledWater) {
+    var zal = document.getElementById('f_zalozeni_cov');
+    var betonaz = document.getElementById('f_betonaz');
+    var sterkOpt = zal.querySelector('option[value="sterk"]');
+    var topas = /^COV-TOPAS/.test(document.getElementById('f_typ_cov').value || '');
+    var highWater = document.getElementById('f_vysoka_spodni_voda').value === 'ano';
+    var sterkAllowed = topas && !highWater;
+    // Štěrk se nabízí jen u TOPAS bez vysoké vody.
+    sterkOpt.hidden = !sterkAllowed;
+    sterkOpt.disabled = !sterkAllowed;
+    if (!sterkAllowed && zal.value === 'sterk') zal.value = 'beton';
+    if (userToggledWater) {
+      // Obetonování je důsledek vysoké vody — při jejím vypnutí ho zase zruš.
+      if (highWater) { zal.value = 'beton'; betonaz.value = 'obetonovani'; }
+      else { zal.value = topas ? 'sterk' : 'beton'; betonaz.value = ''; }
+    } else if (zal.value === '') {
+      zal.value = highWater ? 'beton' : (topas ? 'sterk' : 'beton');
+      if (highWater) betonaz.value = 'obetonovani';
+    }
+  };
+
+  window.onVysokaVodaChange = function() {
+    refreshCovZaklad(true);
     saveToLocalStorage();
   };
 
@@ -1596,6 +1619,10 @@
       var el = document.getElementById(id);
       if (el) el.style.display = hasNadrz ? '' : 'none';
     });
+    // Nádrž má defaultně štěrkový základ (jen když je pole prázdné — neruší
+    // uloženou/ruční volbu).
+    var zalN = document.getElementById('f_zalozeni_nadrze');
+    if (zalN && zalN.value === '') zalN.value = 'sterk';
     filterNadrzAccessoryOptions();
     onPocetNadrzChange();
     saveToLocalStorage();
