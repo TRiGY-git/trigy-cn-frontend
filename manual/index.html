@@ -868,42 +868,22 @@
         <div id="vsak_rozmery" style="display:none">
           <div class="frow">
             <div class="flabel">
-              <label for="f_plocha_vsaku_m2">Plocha vsaku (m²)</label>
-              <div class="hint">Geotextilie = plocha × ²⁄₃.</div>
-              <div class="key">plocha_vsaku_m2</div>
+              <label for="f_objem_vsaku_m3">Objem vsaku (m³)</label>
+              <div class="hint">Vsak = krychle. Stačí objem — výkop (= objem), bagr (objem/4 h) i geotextilie (4,25·∛objem²) se dopočítají.</div>
+              <div class="key">objem_vsaku_m3</div>
             </div>
             <div>
-              <input type="number" id="f_plocha_vsaku_m2" name="plocha_vsaku_m2" min="0" step="0.5" placeholder="m²">
+              <input type="number" id="f_objem_vsaku_m3" name="objem_vsaku_m3" min="0" step="0.5" placeholder="m³">
             </div>
           </div>
           <div class="frow">
             <div class="flabel">
               <label for="f_sterk_vsak_m3">Štěrk do vsaku (m³)</label>
-              <div class="hint">Povinné. Dovoz = ceil(m³ × 1,8 / 7) jízd.</div>
+              <div class="hint">Ručně. Dovoz = ceil(m³ × 1,8 / 7) jízd.</div>
               <div class="key">sterk_vsak_m3</div>
             </div>
             <div>
               <input type="number" id="f_sterk_vsak_m3" name="sterk_vsak_m3" min="0" step="0.5" placeholder="m³">
-            </div>
-          </div>
-          <div class="frow">
-            <div class="flabel">
-              <label for="f_objem_vykopu_vsak_m3">Objem výkopu vsaku (m³)</label>
-              <div class="hint">Bagr = objem / 4 h. Přepíše pole níže.</div>
-              <div class="key">objem_vykopu_vsak_m3</div>
-            </div>
-            <div>
-              <input type="number" id="f_objem_vykopu_vsak_m3" name="objem_vykopu_vsak_m3" min="0" step="0.5" placeholder="m³">
-            </div>
-          </div>
-          <div class="frow">
-            <div class="flabel">
-              <label for="f_bagr_hod_vsak">Bagr — ruční počet hodin</label>
-              <div class="hint">Přepisuje výpočet z objemu výkopu.</div>
-              <div class="key">bagr_hod_vsak</div>
-            </div>
-            <div>
-              <input type="number" id="f_bagr_hod_vsak" name="bagr_hod_vsak" min="0" step="0.5" placeholder="hod">
             </div>
           </div>
           <div class="frow">
@@ -1744,7 +1724,7 @@
     'delka_svodu_cov','delka_rozvodu_cov','delka_svodu_nadrz','delka_rozvodu_nadrz',
     'delka_svodu_septik','delka_rozvodu_septik',
     'pocet_nadrzi','pocet_dni_realizace','vzdalenost_km',
-    'plocha_vsaku_m2','objem_vsaku_m3','sterk_vsak_m3','objem_vykopu_vsak_m3','bagr_hod_vsak',
+    'objem_vsaku_m3','sterk_vsak_m3',
     'qty_cov_prislusenstvi','price_cov_prislusenstvi',
     'qty_nadrz_prislusenstvi','price_nadrz_prislusenstvi','qty_nadrz_geiger',
     'qty_vsak_tunel','price_vsak_tunel',
@@ -1816,7 +1796,7 @@
       active: function() { return !!fieldVal('item_nadrz_prislusenstvi') || !!fieldVal('item_nadrz_geiger'); } },
     { key: 'realizace_vsak', label: 'Vsakovací systém',
       active: function() {
-        return !!fieldVal('item_vsak_tunel') || fieldNum('plocha_vsaku_m2') > 0 || fieldNum('sterk_vsak_m3') > 0;
+        return !!fieldVal('item_vsak_tunel') || fieldNum('objem_vsaku_m3') > 0 || fieldNum('sterk_vsak_m3') > 0;
       } },
     { key: 'septik', label: 'Septik a filtrace',
       active: function() { return !!fieldVal('item_septik_septik') || !!fieldVal('item_septik_filtr'); } },
