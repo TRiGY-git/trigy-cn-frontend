@@ -988,6 +988,16 @@
 
         <div class="frow" data-show-if="item_septik_septik">
           <div class="flabel">
+            <label for="f_bagr_hod_septik">Bagr — ruční počet hodin</label>
+            <div class="hint">Výkop jámy se počítá z objemu septiku (z názvu). Vyplň jen u ručního produktu bez objemu v názvu.</div>
+            <div class="key">bagr_hod_septik</div>
+          </div>
+          <div>
+            <input type="number" id="f_bagr_hod_septik" name="bagr_hod_septik" min="0" step="0.5" placeholder="hod">
+          </div>
+        </div>
+        <div class="frow" data-show-if="item_septik_septik">
+          <div class="flabel">
             <label for="f_delka_svodu_septik">Délka svodu septik (m)</label>
             <div class="hint">Přípojka od domu k septiku.</div>
             <div class="key">delka_svodu_septik</div>
@@ -1722,7 +1732,7 @@
   var NUM_NAMES = new Set([
     'vat_rate','sleva_pct','sleva_kc','dotace_kc',
     'delka_svodu_cov','delka_rozvodu_cov','delka_svodu_nadrz','delka_rozvodu_nadrz',
-    'delka_svodu_septik','delka_rozvodu_septik',
+    'delka_svodu_septik','delka_rozvodu_septik','bagr_hod_septik',
     'pocet_nadrzi','pocet_dni_realizace','vzdalenost_km',
     'objem_vsaku_m3','sterk_vsak_m3',
     'qty_cov_prislusenstvi','price_cov_prislusenstvi',
