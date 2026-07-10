@@ -676,6 +676,20 @@
           </div>
         </div>
 
+        <div class="frow" id="row_obetonovani_nadrz" style="display:none">
+          <div class="flabel">
+            <label for="f_obetonovani_nadrz">Obetonování nádrže</label>
+            <div class="hint">Paušál 9 500 Kč/nádrž (vč. dopravy).</div>
+            <div class="key">obetonovani_nadrz</div>
+          </div>
+          <div>
+            <select id="f_obetonovani_nadrz" name="obetonovani_nadrz">
+              <option value="">— ne —</option>
+              <option value="ano">Ano</option>
+            </select>
+          </div>
+        </div>
+
         <div class="frow" id="row_potvrzeni_propojeni" style="display:none">
           <div class="flabel">
             <label for="f_potvrzeni_propojeni_nadrzi">Potvrzení propojení nádrží</label>
@@ -994,6 +1008,19 @@
           </div>
           <div>
             <input type="number" id="f_bagr_hod_septik" name="bagr_hod_septik" min="0" step="0.5" placeholder="hod">
+          </div>
+        </div>
+        <div class="frow" data-show-if="item_septik_septik">
+          <div class="flabel">
+            <label for="f_obetonovani_septik">Obetonování septiku</label>
+            <div class="hint">Paušál 9 500 Kč (vč. dopravy).</div>
+            <div class="key">obetonovani_septik</div>
+          </div>
+          <div>
+            <select id="f_obetonovani_septik" name="obetonovani_septik">
+              <option value="">— ne —</option>
+              <option value="ano">Ano</option>
+            </select>
           </div>
         </div>
         <div class="frow" data-show-if="item_septik_septik">
@@ -1605,7 +1632,7 @@
 
   window.onNadrzChange = function() {
     var hasNadrz = !!document.getElementById('f_typ_nadrze').value;
-    ['row_pocet_nadrzi','row_zalozeni_nadrze','row_nadrz_prislusenstvi','row_nadrz_geiger'].forEach(function(id) {
+    ['row_pocet_nadrzi','row_zalozeni_nadrze','row_obetonovani_nadrz','row_nadrz_prislusenstvi','row_nadrz_geiger'].forEach(function(id) {
       var el = document.getElementById(id);
       if (el) el.style.display = hasNadrz ? '' : 'none';
     });
