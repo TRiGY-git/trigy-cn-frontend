@@ -2071,9 +2071,54 @@
   document.getElementById('rezie-split-rows').addEventListener('input', updateRezieSplitSum);
 
   // ── Boot ──────────────────────────────────────────────────
+  // ── Ručně přidané produkty z katalogu → append do slotů formuláře ─────────
+  // Feedové/katalogové položky jsou v HTML natvrdo; sem přibývají jen ručně
+  // přidané (attrs.zdroj='rucni' s form_slot). Volá se PŘED restoreFromLocalStorage,
+  // aby uložené volby ručních položek našly svou <option> (i v klonech řádků).
+  var SLOT_SELECT = {
+    cov_jednotka:        'select[name="typ_cov"]',
+    cov_prislusenstvi:   'select[name^="item_cov_prislusenstvi"]',
+    nadrz_jednotka:      'select[name="typ_nadrze"]',
+    nadrz_prislusenstvi: 'select[name^="item_nadrz_prislusenstvi"]',
+    vsak_prvek:          'select[name="item_vsak_tunel"]',
+    septik_hlavni:       'select[name="item_septik_septik"]',
+    septik_filtr:        'select[name="item_septik_filtr"]',
+  };
+
+  function appendCatalogItems(items) {
+    (items || []).forEach(function(it) {
+      var selector = SLOT_SELECT[it.formSlot];
+      if (!selector || !it.code) return;
+      var label = it.name + ' — ' + Math.round(it.unitPrice).toLocaleString('cs-CZ') + ' Kč/' + (it.unit || 'ks');
+      var esc = (window.CSS && CSS.escape) ? CSS.escape(it.code) : it.code;
+      Array.prototype.forEach.call(document.querySelectorAll(selector), function(sel) {
+        if (sel.querySelector('option[value="' + esc + '"]')) return; // už existuje (feed)
+        var opt = document.createElement('option');
+        opt.value = it.code;
+        opt.textContent = label;
+        // Filtry: značka ČOV příslušenství / rodina nádrže. Bez atributu = univerzální.
+        if (it.covBrands && it.covBrands.length) opt.setAttribute('data-brand', it.covBrands[0]);
+        if (it.nadrzSadaGroup) opt.setAttribute('data-nadrz-group', it.nadrzSadaGroup);
+        sel.appendChild(opt);
+      });
+    });
+    if (window.filterCovAccessoryOptions) filterCovAccessoryOptions();
+    if (window.filterNadrzAccessoryOptions) filterNadrzAccessoryOptions();
+  }
+
+  async function loadFormCatalog() {
+    try {
+      var data = await apiFetch('/quote/form-catalog', { method: 'GET' });
+      if (data && data.items) appendCatalogItems(data.items);
+    } catch (e) {
+      // Mimo Pipedrive / bez tokenu → ruční položky se nepřidají (nefatální).
+    }
+  }
+
   (async function boot() {
     dealId = parseDealId();
     await initSdk();
+    await loadFormCatalog();
     restoreFromLocalStorage();
     refreshRezieSplitRows();
     refreshConditionalFields();

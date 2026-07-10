@@ -1182,6 +1182,28 @@
         obchod: 'Obchodní položky',
       };
 
+      // Sloty manuálního formuláře per kategorie — kam se produkt vybírá.
+      // Musí sedět s FORM_SLOTS_BY_KATEGORIE v adminRoutes.ts a s mapou ve
+      // frontend/manual (appendCatalogItems).
+      const FORM_SLOTS_BY_KAT = {
+        cov:    [{ v: 'cov_jednotka', l: 'Hlavní jednotka ČOV' }, { v: 'cov_prislusenstvi', l: 'Příslušenství ČOV' }],
+        nadrz:  [{ v: 'nadrz_jednotka', l: 'Hlavní nádrž' }, { v: 'nadrz_prislusenstvi', l: 'Příslušenství nádrže' }],
+        vsak:   [{ v: 'vsak_prvek', l: 'Vsakovací prvek' }],
+        septik: [{ v: 'septik_hlavni', l: 'Hlavní septik' }, { v: 'septik_filtr', l: 'Filtr' }],
+      };
+      // Sloty hlavní jednotky, u kterých se zadávají rozměry (výkop/štěrk).
+      const UNIT_SLOTS = { cov_jednotka: 1, nadrz_jednotka: 1 };
+      // Výchozí slot dle činnosti sekce (příslušenství → *_prislusenstvi/filtr).
+      function defaultSlotFor(kat, cin) {
+        var slots = FORM_SLOTS_BY_KAT[kat];
+        if (!slots || !slots.length) return null;
+        if (cin === 'prislusenstvi') {
+          var p = slots.filter(function (s) { return /prislusenstvi|filtr/.test(s.v); })[0];
+          if (p) return p.v;
+        }
+        return slots[0].v;
+      }
+
       // ── State ─────────────────────────────────────────────────────────────
       var _cenikLoaded = false;
       var _allItems = [];   // raw items from API
@@ -1321,6 +1343,23 @@
         var form = document.createElement('form');
         form.className = 'cenik-add-form';
         form.style.display = 'none';
+        var slots = FORM_SLOTS_BY_KAT[kat];
+        var slotHtml = '';
+        if (slots && slots.length) {
+          var defSlot = defaultSlotFor(kat, cin);
+          var opts = slots.map(function (s) {
+            return '<option value="' + s.v + '"' + (s.v === defSlot ? ' selected' : '') + '>' + escHtml(s.l) + '</option>';
+          }).join('');
+          slotHtml = '<label>Kde se ve formuláři vybírá<select class="ca-slot">' + opts + '</select></label>';
+        }
+        var dimsHtml = slots && slots.length
+          ? '<div class="cenik-add-grid ca-dims" style="display:none">' +
+              '<label>Šířka (m)<input type="number" class="ca-w" min="0" step="0.01"></label>' +
+              '<label>Délka (m)<input type="number" class="ca-l" min="0" step="0.01"></label>' +
+              '<label>Výška (m)<input type="number" class="ca-h" min="0" step="0.01"></label>' +
+              '<label>Max. nátok (l/den)<input type="number" class="ca-natok" min="0" step="1"></label>' +
+            '</div>'
+          : '';
         form.innerHTML =
           '<div class="cenik-add-grid">' +
             '<label>Název<input type="text" class="ca-name" maxlength="500" required></label>' +
@@ -1328,10 +1367,23 @@
             '<label>Cena / MJ (bez DPH)<input type="number" class="ca-price" min="0" step="1" required></label>' +
             '<label>Nákupní cena (nepovinné)<input type="number" class="ca-purchase" min="0" step="1"></label>' +
           '</div>' +
+          '<div class="cenik-add-grid">' +
+            slotHtml +
+            '<label>Název do PDF (nepovinné)<input type="text" class="ca-pdfname" maxlength="1000" placeholder="Jinak se použije Název"></label>' +
+          '</div>' +
+          dimsHtml +
           '<div class="cenik-add-actions">' +
             '<button type="submit" class="cenik-add-submit">Přidat</button>' +
             '<button type="button" class="cenik-add-cancel">Zrušit</button>' +
           '</div>';
+        // Rozměry se ukazují jen u slotu hlavní jednotky (ČOV/nádrž).
+        var slotSel = form.querySelector('.ca-slot');
+        var dimsWrap = form.querySelector('.ca-dims');
+        function syncDims() {
+          if (dimsWrap) dimsWrap.style.display = (slotSel && UNIT_SLOTS[slotSel.value]) ? '' : 'none';
+        }
+        if (slotSel) slotSel.addEventListener('change', syncDims);
+        syncDims();
         addBtn.addEventListener('click', function () {
           var open = form.style.display === 'none';
           form.style.display = open ? '' : 'none';
@@ -1473,15 +1525,32 @@
         if (purchase !== null && (!Number.isFinite(purchase) || purchase < 0)) {
           showCenikToast('Nákupní cena musí být nezáporné číslo.', 'error'); return;
         }
+        var slotEl = form.querySelector('.ca-slot');
+        var formSlot = slotEl ? slotEl.value : '';
+        var pdfNameEl = form.querySelector('.ca-pdfname');
+        var pdfName = pdfNameEl ? pdfNameEl.value.trim() : '';
+        var payload = {
+          name: name, unit: unit, unitPrice: price,
+          kategorie: kat, cinnost: cin, purchasePrice: purchase,
+        };
+        if (formSlot) payload.formSlot = formSlot;
+        if (pdfName) payload.pdfName = pdfName;
+        if (formSlot && UNIT_SLOTS[formSlot]) {
+          var w = Number(form.querySelector('.ca-w').value);
+          var l = Number(form.querySelector('.ca-l').value);
+          var h = Number(form.querySelector('.ca-h').value);
+          var natok = Number(form.querySelector('.ca-natok').value);
+          if (Number.isFinite(w) && w > 0) payload.rozmerWM = w;
+          if (Number.isFinite(l) && l > 0) payload.rozmerLM = l;
+          if (Number.isFinite(h) && h > 0) payload.vyskaM = h;
+          if (Number.isFinite(natok) && natok > 0) payload.maxNatokL = natok;
+        }
         var submitBtn = form.querySelector('.cenik-add-submit');
         submitBtn.disabled = true;
         try {
           var res = await cenikApiFetch('/admin/price-items', {
             method: 'POST',
-            body: JSON.stringify({
-              name: name, unit: unit, unitPrice: price,
-              kategorie: kat, cinnost: cin, purchasePrice: purchase,
-            }),
+            body: JSON.stringify(payload),
           });
           if (!res.ok) throw new Error(res.error ? JSON.stringify(res.error) : 'Přidání selhalo');
           showCenikToast('Přidán produkt ' + res.code + ' (verze ceníku ' + res.published.version_no + ').', 'success');
