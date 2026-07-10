@@ -548,6 +548,7 @@
       <button class="nav-item" data-section="vypoctove" type="button">3. Výpočet položek</button>
       <button class="nav-item" data-section="rezie" type="button">4. Režie a marže</button>
       <button class="nav-item" data-section="vzhled" type="button">5. Vzhled a texty CN</button>
+      <button class="nav-item" data-section="historie" type="button">6. Historie CN</button>
     </nav>
 
     <main class="content">
@@ -709,6 +710,37 @@
           <div id="covspec-list"></div>
         </div>
         <div id="covspec-toast" class="toast"></div>
+      </div>
+
+      <div class="section" id="section-historie">
+        <h2>Historie CN</h2>
+        <div id="historie-banner" class="toast toast-warn" style="display:none;margin-bottom:10px;">
+          Mimo Pipedrive — admin funkce nedostupné
+        </div>
+        <p class="section-lead">Všechny vygenerované cenové nabídky napříč dealy, od nejnovější. Rozpis (náklady / marže / režie) je interní — v PDF pro zákazníka se nezobrazuje.</p>
+        <div class="cenik-toolbar">
+          <button class="btn btn-secondary" id="btn-load-historie" type="button">Načíst / obnovit</button>
+          <span id="historie-count" class="section-lead" style="margin:0;"></span>
+        </div>
+        <div id="historie-loading" class="cenik-loading" style="display:none;">Načítám historii…</div>
+        <div id="historie-toast" class="toast"></div>
+        <div style="overflow-x:auto;">
+          <table class="mapovani-table" id="historie-table" style="display:none;">
+            <thead>
+              <tr>
+                <th>Číslo CN</th>
+                <th>Deal</th>
+                <th>Celkem</th>
+                <th>Náklady</th>
+                <th>Marže</th>
+                <th>Režie</th>
+                <th>Vytvořil</th>
+                <th>Datum</th>
+              </tr>
+            </thead>
+            <tbody id="historie-tbody"></tbody>
+          </table>
+        </div>
       </div>
 
       <div class="section" id="section-mapovani">
@@ -2000,6 +2032,71 @@
           return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
         });
       }
+
+      // ── Historie CN ────────────────────────────────────────────────────
+      // Globální výpis vygenerovaných CN (GET /admin/quotes) s interním
+      // rozpisem (celkem/náklady/marže/režie) jako v panelu dealu.
+      var _histLoaded = false;
+
+      function histKc(v) {
+        if (v === null || v === undefined) return '—';
+        return new Intl.NumberFormat('cs-CZ', { style: 'currency', currency: 'CZK', maximumFractionDigits: 0 }).format(v);
+      }
+
+      function histDate(iso) {
+        var d = new Date(iso);
+        return isNaN(d.getTime()) ? String(iso) : d.toLocaleString('cs-CZ', {
+          day: 'numeric', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit',
+        });
+      }
+
+      async function loadHistorie() {
+        if (_vzOutside) {
+          document.getElementById('historie-banner').style.display = 'block';
+          return;
+        }
+        var loading = document.getElementById('historie-loading');
+        loading.style.display = 'block';
+        try {
+          var res = await vzApiFetch('/admin/quotes');
+          if (!res.ok) throw new Error(res.error || 'Načtení historie selhalo');
+          var tbody = document.getElementById('historie-tbody');
+          tbody.innerHTML = '';
+          res.quotes.forEach(function (q) {
+            var tr = document.createElement('tr');
+            var cnCell = q.fileUrl
+              ? '<a href="' + escapeHtml(q.fileUrl) + '" target="_blank" rel="noopener">' + escapeHtml(q.quoteNumber) + '</a>'
+              : escapeHtml(q.quoteNumber);
+            tr.innerHTML =
+              '<td><strong>' + cnCell + '</strong></td>' +
+              '<td>#' + escapeHtml(q.dealId) + '</td>' +
+              '<td>' + histKc(q.total) + '</td>' +
+              '<td>' + histKc(q.cost) + '</td>' +
+              '<td>' + histKc(q.margin) + '</td>' +
+              '<td>' + histKc(q.rezie) + '</td>' +
+              '<td>' + escapeHtml(q.createdBy || '—') + '</td>' +
+              '<td>' + escapeHtml(histDate(q.createdAt)) + '</td>';
+            tbody.appendChild(tr);
+          });
+          document.getElementById('historie-table').style.display = res.quotes.length ? '' : 'none';
+          document.getElementById('historie-count').textContent = res.quotes.length
+            ? res.quotes.length + ' CN'
+            : 'Zatím žádné vygenerované CN.';
+          _histLoaded = true;
+        } catch (err) {
+          showToast('historie-toast', 'Chyba: ' + err.message, 'error');
+        } finally {
+          loading.style.display = 'none';
+        }
+      }
+
+      document.getElementById('btn-load-historie').addEventListener('click', loadHistorie);
+      // Lazy-load při prvním otevření sekce z navigace.
+      document.querySelectorAll('[data-section="historie"]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          if (!_histLoaded) loadHistorie();
+        });
+      });
 
       // ── Barvy dokumentu ────────────────────────────────────────────────
       var COLOR_KEYS = ['BRAND', 'WHITE', 'LAVENDER', 'BORDER_GRAY', 'MUTED_GRAY', 'PLACEHOLDER_GRAY', 'HIGHLIGHT_BG'];
