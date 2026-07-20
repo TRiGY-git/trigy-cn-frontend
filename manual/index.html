@@ -193,6 +193,28 @@
     .result-link { display: inline-block; margin-top: 8px; color: var(--text); font-weight: 600; font-size: 13px; text-decoration: underline; }
     .result-link:hover { color: #000; }
 
+    /* ── Debug rozpis (strukturovaná tabulka) ── */
+    .dbg-section { margin-bottom: 14px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; }
+    .dbg-section-head { background: #efe7f5; padding: 8px 10px; }
+    .dbg-section-head strong { font-size: 13px; }
+    .dbg-section-sub { font-size: 11px; color: #666; margin-top: 2px; }
+    .dbg-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .dbg-table th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.03em; color: #777; padding: 5px 8px; border-bottom: 1px solid #e3e3e3; background: #fafafa; }
+    .dbg-table td { padding: 5px 8px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+    .dbg-table td.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .dbg-row-detail td { padding: 0 8px 6px 8px; border-bottom: 1px solid #e8e8e8; }
+    .dbg-formula { font-size: 11px; color: #777; font-family: ui-monospace, Consolas, monospace; }
+    .dbg-badge { display: inline-block; font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 8px; margin-left: 4px; vertical-align: 1px; }
+    .dbg-badge.hidden { background: #f3e2c7; color: #7a5200; }
+    .dbg-badge.nomarkup { background: #dceefb; color: #1a5a86; }
+    .dbg-badge.unconfirmed { background: #fbdada; color: #9c1f1f; }
+    .dbg-badge.confirmed { background: #e0f2e4; color: #1d6b32; }
+    .dbg-code { font-family: ui-monospace, Consolas, monospace; font-size: 11px; color: #555; white-space: nowrap; }
+    .dbg-sum td { font-weight: 700; background: #faf7fd; border-bottom: none; }
+    .dbg-kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 6px 14px; font-size: 12px; padding: 8px 10px; }
+    .dbg-kv div span { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.03em; color: #888; }
+    .dbg-kv div b { font-variant-numeric: tabular-nums; }
+
     @media (min-width: 560px) {
       .frow { grid-template-columns: minmax(150px,220px) 1fr; gap: 10px; }
     }
@@ -1247,7 +1269,8 @@
         <strong>Debug rozpis (CN NEBYLA vytvořena)</strong>
         <a href="#" id="debug-download" download="debug-rozpis.txt">💾 Stáhnout .txt</a>
       </div>
-      <pre id="debug-text" style="white-space:pre-wrap; font-family:ui-monospace,Consolas,monospace; font-size:11px; max-height:420px; overflow:auto; margin:0;"></pre>
+      <div id="debug-rich" style="max-height:520px; overflow:auto;"></div>
+      <pre id="debug-text" style="display:none; white-space:pre-wrap; font-family:ui-monospace,Consolas,monospace; font-size:11px; max-height:420px; overflow:auto; margin:0;"></pre>
     </div>
 
   </form>
@@ -1292,6 +1315,7 @@
   var resultLink = document.getElementById('result-link');
   var debugCard     = document.getElementById('debug-card');
   var debugText     = document.getElementById('debug-text');
+  var debugRich     = document.getElementById('debug-rich');
   var debugDownload = document.getElementById('debug-download');
   var chkDebug       = document.getElementById('chk-debug');
 
@@ -1938,6 +1962,115 @@
     return data;
   }
 
+  // ── Debug rozpis: strukturované vykreslení ────────────────
+  function escH(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(ch) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
+    });
+  }
+  function fmtN(n) {
+    if (typeof n !== 'number' || !isFinite(n)) return '—';
+    return new Intl.NumberFormat('cs-CZ', { maximumFractionDigits: 2 }).format(n);
+  }
+
+  function dbgBadges(line) {
+    var out = '';
+    if (line.hiddenInPdf) out += '<span class="dbg-badge hidden">skryto v PDF</span>';
+    if (line.noMarkup) out += '<span class="dbg-badge nomarkup">bez marže</span>';
+    if (line.requiresConfirmation) {
+      out += line.confirmed
+        ? '<span class="dbg-badge confirmed">potvrzeno</span>'
+        : '<span class="dbg-badge unconfirmed">NEPOTVRZENO</span>';
+    }
+    return out;
+  }
+
+  function dbgDetail(line) {
+    var parts = [];
+    if (line.calculation) {
+      var c = line.calculation;
+      var f = 'vzorec: ' + c.rule + (c.expression ? ' — ' + c.expression : '');
+      if (c.inputs && Object.keys(c.inputs).length) {
+        f += ' · vstupy: ' + Object.keys(c.inputs).map(function(k) {
+          var v = c.inputs[k];
+          return k + '=' + (typeof v === 'number' ? fmtN(v) : String(v));
+        }).join(', ');
+      }
+      parts.push(f);
+    }
+    if (line.quantitySource || line.priceSource) {
+      parts.push('množství: ' + (line.quantitySource || '?') + ' · cena: ' + (line.priceSource || '?'));
+    }
+    if (line.overrideReason) parts.push('override: ' + line.overrideReason);
+    return parts.join('  |  ');
+  }
+
+  window.renderDebugBreakdown = renderDebugBreakdown;
+  function renderDebugBreakdown(data) {
+    if (!data.sections || !data.sections.length) {
+      // Fallback: plochý text (starší backend bez strukturovaných dat).
+      debugRich.innerHTML = '';
+      debugText.style.display = '';
+      debugText.textContent = data.breakdown || '';
+      return;
+    }
+    debugText.style.display = 'none';
+    var h = '';
+    data.sections.forEach(function(sec) {
+      h += '<div class="dbg-section">';
+      h += '<div class="dbg-section-head"><strong>' + escH(sec.label) + '</strong>' +
+        '<div class="dbg-section-sub">' + escH(sec.key) + ' · ' + escH(sec.category || '—') + '/' + escH(sec.subKey || '—') +
+        ' · DPH ' + Math.round((sec.vatRate || 0) * 100) + ' % · prodej <b>' + fmtCzk(sec.sellNoVat) + '</b>' +
+        ' = náklad ' + fmtCzk(sec.costNoVat) + ' + marže ' + fmtCzk(sec.marginNoVat) + '</div></div>';
+      h += '<table class="dbg-table"><thead><tr>' +
+        '<th>Kód</th><th>Položka</th><th style="text-align:right">Množství</th>' +
+        '<th style="text-align:right">Cena/MJ</th><th style="text-align:right">Celkem</th></tr></thead><tbody>';
+      (sec.lines || []).forEach(function(line) {
+        h += '<tr>' +
+          '<td class="dbg-code">' + escH(line.code || '—') + '</td>' +
+          '<td>' + escH(line.name) + dbgBadges(line) + '</td>' +
+          '<td class="num">' + fmtN(line.qty) + ' ' + escH(line.unit || '') + '</td>' +
+          '<td class="num">' + fmtN(line.unitCost) + ' Kč</td>' +
+          '<td class="num"><b>' + fmtN(line.lineCost) + ' Kč</b></td></tr>';
+        var det = dbgDetail(line);
+        if (det) {
+          h += '<tr class="dbg-row-detail"><td></td><td colspan="4"><div class="dbg-formula">' + escH(det) + '</div></td></tr>';
+        }
+      });
+      h += '<tr class="dbg-sum"><td></td><td>Sekce celkem (náklad)</td><td></td><td></td>' +
+        '<td class="num">' + fmtCzk(sec.costNoVat) + '</td></tr>';
+      h += '</tbody></table></div>';
+    });
+
+    var m = data.meta || {};
+    h += '<div class="dbg-section"><div class="dbg-section-head"><strong>Cenové vrstvy</strong></div><div class="dbg-kv">' +
+      '<div><span>Marže</span><b>' + (typeof m.marzePct === 'number' ? fmtN(m.marzePct * 100) + ' %' : '—') + '</b></div>' +
+      '<div><span>Dny realizace</span><b>' + fmtN(m.dnyRealizace) + '</b></div>' +
+      '<div><span>Práce (základ)</span><b>' + fmtN(m.pracaCost) + ' Kč</b></div>' +
+      '<div><span>Režie (základ+sazba×dny)</span><b>' + fmtN(m.rezieCost) + ' Kč</b></div>' +
+      '<div><span>Režie pool celkem</span><b>' + fmtN(m.reziePool) + ' Kč</b></div>' +
+      '<div><span>Náklady (interní)</span><b>' + fmtN(m.naklady) + ' Kč</b></div>' +
+      '<div><span>Režie celkem (interní)</span><b>' + fmtN(m.rezieCelkem) + ' Kč</b></div>' +
+      '</div></div>';
+
+    var t = data.totals || {};
+    h += '<div class="dbg-section"><div class="dbg-section-head"><strong>Celkem</strong></div><div class="dbg-kv">' +
+      '<div><span>Prodej bez DPH</span><b>' + fmtCzk(t.sellNoVat || 0) + '</b></div>' +
+      '<div><span>DPH</span><b>' + fmtCzk(t.vat || 0) + '</b></div>' +
+      '<div><span>Prodej s DPH</span><b>' + fmtCzk(t.sellVat || 0) + '</b></div>' +
+      '<div><span>Náklad bez DPH</span><b>' + fmtCzk(t.costNoVat || 0) + '</b></div>' +
+      '<div><span>Marže</span><b>' + fmtCzk(t.marginNoVat || 0) + ' (' + fmtN((t.marginPct || 0) * 100) + ' %)</b></div>' +
+      '</div></div>';
+
+    if (data.issues && data.issues.length) {
+      h += '<div class="dbg-section"><div class="dbg-section-head"><strong>Issues</strong></div><div style="padding:8px 10px; font-size:12px; color:#9c1f1f;">' +
+        data.issues.map(function(i) { return escH((i.service || '') + ': ' + (i.message || '')); }).join('<br>') +
+        '</div></div>';
+    }
+
+    debugRich.innerHTML = h;
+  }
+
   // ── Generate CN ──────────────────────────────────────────
   async function generate() {
     if (!dealId) { showMsg('Chybí Deal ID — otevři modal z detailu dealu.', 'error'); return; }
@@ -1970,7 +2103,7 @@
         body: JSON.stringify({ dealId: dealId, variables: variables, fromForm: true, debug: !!isDebug }),
       });
       if (isDebug) {
-        debugText.textContent = data.breakdown;
+        renderDebugBreakdown(data);
         var blob = new Blob([data.breakdown], { type: 'text/plain' });
         debugDownload.href = URL.createObjectURL(blob);
         debugCard.style.display = 'block';
