@@ -2016,12 +2016,18 @@
     }
     debugText.style.display = 'none';
     var h = '';
+    function bagrHodiny(sec) {
+      return (sec.lines || []).filter(function(l) { return l.code === 'BAGR-HOD'; })
+        .reduce(function(sum, l) { return sum + (l.qty || 0); }, 0);
+    }
     data.sections.forEach(function(sec) {
+      var bagrH = bagrHodiny(sec);
       h += '<div class="dbg-section">';
       h += '<div class="dbg-section-head"><strong>' + escH(sec.label) + '</strong>' +
         '<div class="dbg-section-sub">' + escH(sec.key) + ' · ' + escH(sec.category || '—') + '/' + escH(sec.subKey || '—') +
         ' · DPH ' + Math.round((sec.vatRate || 0) * 100) + ' % · prodej <b>' + fmtCzk(sec.sellNoVat) + '</b>' +
-        ' = náklad ' + fmtCzk(sec.costNoVat) + ' + marže ' + fmtCzk(sec.marginNoVat) + '</div></div>';
+        ' = náklad ' + fmtCzk(sec.costNoVat) + ' + marže ' + fmtCzk(sec.marginNoVat) +
+        (bagrH > 0 ? ' · <b>bagr ' + fmtN(bagrH) + ' h</b>' : '') + '</div></div>';
       h += '<table class="dbg-table"><thead><tr>' +
         '<th>Kód</th><th>Položka</th><th style="text-align:right">Množství</th>' +
         '<th style="text-align:right">Cena/MJ</th><th style="text-align:right">Celkem</th></tr></thead><tbody>';
@@ -2041,6 +2047,31 @@
         '<td class="num">' + fmtCzk(sec.costNoVat) + '</td></tr>';
       h += '</tbody></table></div>';
     });
+
+    // Hodiny bagru po kategoriích (jen sekce, kde bagr je).
+    var bagrRows = data.sections.map(function(sec) {
+      return { label: sec.label, h: bagrHodiny(sec) };
+    }).filter(function(r) { return r.h > 0; });
+    if (bagrRows.length) {
+      var bagrTotal = bagrRows.reduce(function(s, r) { return s + r.h; }, 0);
+      h += '<div class="dbg-section"><div class="dbg-section-head"><strong>Hodiny bagru po kategoriích</strong></div><div class="dbg-kv">' +
+        bagrRows.map(function(r) {
+          return '<div><span>' + escH(r.label) + '</span><b>' + fmtN(r.h) + ' h</b></div>';
+        }).join('') +
+        '<div><span>Celkem</span><b>' + fmtN(bagrTotal) + ' h</b></div>' +
+        '</div></div>';
+    }
+
+    // Náklady po kategoriích (interní rozpad z enginu).
+    var cbc = data.costByCategory || {};
+    var cbcKeys = Object.keys(cbc);
+    if (cbcKeys.length) {
+      h += '<div class="dbg-section"><div class="dbg-section-head"><strong>Náklady po kategoriích</strong></div><div class="dbg-kv">' +
+        cbcKeys.map(function(k) {
+          return '<div><span>' + escH(k) + '</span><b>' + fmtCzk(cbc[k]) + '</b></div>';
+        }).join('') +
+        '</div></div>';
+    }
 
     var m = data.meta || {};
     h += '<div class="dbg-section"><div class="dbg-section-head"><strong>Cenové vrstvy</strong></div><div class="dbg-kv">' +
